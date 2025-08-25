@@ -43,7 +43,6 @@ const FundingPostsScreen = () => {
   }, []);
 
   const handleSupport = (amount) => {
-    // In real app → update DB with funded amount
     alert(`Thank you for supporting with $${amount}!`);
     setSupportAmount("");
     setSelectedPost(null);
@@ -63,27 +62,47 @@ const FundingPostsScreen = () => {
         {posts.length === 0 ? (
           <Text style={styles.noData}>No funding requests yet.</Text>
         ) : (
-          posts.map((post) => (
-            <TouchableOpacity
-              key={post.id}
-              style={styles.card}
-              onPress={() => setSelectedPost(post)}
-            >
-              {post.imageUrl ? (
-                <Image source={{ uri: post.imageUrl }} style={styles.image} />
-              ) : null}
-              <Text style={styles.name}>{post.applicantName}</Text>
-              <Text style={styles.detail}>📍 {post.location}</Text>
-              {post.category ? (
-                <Text style={styles.detail}>🏷️ {post.category}</Text>
-              ) : null}
-              <Text style={styles.detail}>💰 Goal: ${post.goalAmount}</Text>
-            </TouchableOpacity>
-          ))
+          posts.map((post) => {
+            const fundedPercent = (post.funded / post.goalAmount) * 100;
+            const remaining = post.goalAmount - post.funded;
+
+            return (
+              <View key={post.id} style={styles.card}>
+                {post.imageUrl ? (
+                  <Image source={{ uri: post.imageUrl }} style={styles.image} />
+                ) : null}
+                <Text style={styles.name}>{post.applicantName}</Text>
+                <Text style={styles.detail}>📍 {post.location}</Text>
+                {post.category ? (
+                  <Text style={styles.tag}>{post.category}</Text>
+                ) : null}
+
+                {/* Progress bar */}
+                <View style={styles.progressContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      { width: `${fundedPercent}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.remainingText}>
+                  ${remaining} to go • {Math.round(fundedPercent)}% funded
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => setSelectedPost(post)}
+                >
+                  <Text style={styles.viewText}>View Loan</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
         )}
       </ScrollView>
 
-      {/* ✅ Modal for details */}
+      {/* Modal */}
       {selectedPost && (
         <Modal
           animationType="slide"
@@ -105,7 +124,7 @@ const FundingPostsScreen = () => {
                   {selectedPost.category} • {selectedPost.location}
                 </Text>
 
-                {/* ✅ Progress bar */}
+                {/* Progress */}
                 <View style={styles.progressContainer}>
                   <View
                     style={[
@@ -123,14 +142,14 @@ const FundingPostsScreen = () => {
                   {selectedPost.goalAmount - selectedPost.funded} to go
                 </Text>
 
-                {/* ✅ About */}
+                {/* Info */}
                 <Text style={styles.sectionTitle}>How this money helps</Text>
                 <Text style={styles.paragraph}>{selectedPost.useOfFunds}</Text>
 
                 <Text style={styles.sectionTitle}>About</Text>
                 <Text style={styles.paragraph}>{selectedPost.description}</Text>
 
-                {/* ✅ Support Options */}
+                {/* Support Options */}
                 <Text style={styles.sectionTitle}>Support this request</Text>
                 <View style={styles.amountRow}>
                   {[25, 50, 100].map((amt) => (
@@ -214,9 +233,47 @@ const styles = StyleSheet.create({
   detail: {
     fontSize: 14,
     color: "#555",
+    marginBottom: 2,
+  },
+  tag: {
+    backgroundColor: "#eee",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    fontSize: 13,
+    marginVertical: 4,
+  },
+  progressContainer: {
+    backgroundColor: "#eee",
+    borderRadius: 8,
+    height: 8,
+    marginTop: 8,
+  },
+  progressBar: {
+    backgroundColor: "#28a745",
+    height: 8,
+    borderRadius: 8,
+  },
+  remainingText: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#444",
+  },
+  viewButton: {
+    marginTop: 10,
+    backgroundColor: "#28a745",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  viewText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 
-  // ✅ Modal styles
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -243,25 +300,11 @@ const styles = StyleSheet.create({
     color: "#777",
     marginBottom: 10,
   },
-
-  progressContainer: {
-    backgroundColor: "#eee",
-    borderRadius: 8,
-    height: 10,
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  progressBar: {
-    backgroundColor: "#28a745",
-    height: 10,
-    borderRadius: 8,
-  },
   progressText: {
     fontSize: 13,
     color: "#444",
     marginBottom: 15,
   },
-
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
@@ -271,8 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
-
-  // ✅ Support buttons
   amountRow: {
     flexDirection: "row",
     justifyContent: "space-between",

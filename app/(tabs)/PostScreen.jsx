@@ -70,60 +70,62 @@ const CreateFundingPostScreen = () => {
 
   // ✅ Submit Post
   const handleSubmit = async () => {
-    if (!applicantName || !location || !goalAmount || !description || !useOfFunds) {
-      showMessage("Please fill all required fields.", "Validation Error");
-      return;
+  if (!applicantName || !location || !goalAmount || !description || !useOfFunds) {
+    showMessage("Please fill all required fields.", "Validation Error");
+    return;
+  }
+
+  try {
+    setUploading(true);
+    let imageUrl = "";
+
+    if (image) {
+      // 👇 Works on both web + mobile
+      const response = await fetch(image);
+      const blob = await response.blob();
+      const fileRef = ref(storage, `fundingPosts/${Date.now()}.jpg`);
+      await uploadBytes(fileRef, blob);
+      imageUrl = await getDownloadURL(fileRef);
     }
 
-    try {
-      setUploading(true);
-      let imageUrl = "";
+    const postData = {
+      applicantName,
+      location,
+      category,
+      goalAmount: parseFloat(goalAmount),
+      daysRemaining: parseInt(daysRemaining),
+      description,
+      teamMembers: teamMembers
+        ? teamMembers.split(",").map((m) => m.trim())
+        : [],
+      useOfFunds,
+      loanPurpose,
+      imageUrl, // ✅ always a valid Firebase URL or ""
+      createdAt: serverTimestamp(),
+    };
 
-      if (image && Platform.OS !== "web") {
-        const response = await fetch(image);
-        const blob = await response.blob();
-        const fileRef = ref(storage, `fundingPosts/${Date.now()}.jpg`);
-        await uploadBytes(fileRef, blob);
-        imageUrl = await getDownloadURL(fileRef);
-      }
+    await addDoc(collection(db, "fundingPosts"), postData);
+    showMessage("Your funding request has been posted!", "Success");
 
-      const postData = {
-        applicantName,
-        location,
-        category,
-        goalAmount: parseFloat(goalAmount),
-        daysRemaining: parseInt(daysRemaining),
-        description,
-        teamMembers: teamMembers
-          ? teamMembers.split(",").map((m) => m.trim())
-          : [],
-        useOfFunds,
-        loanPurpose,
-        imageUrl,
-        createdAt: serverTimestamp(),
-      };
+    // Reset form
+    setApplicantName("");
+    setLocation("");
+    setCategory("");
+    setGoalAmount("");
+    setDaysRemaining("");
+    setDescription("");
+    setTeamMembers("");
+    setUseOfFunds("");
+    setLoanPurpose("");
+    setImage(null);
+  } catch (error) {
+    console.error("Error posting data:", error);
+    showMessage("Failed to create the post.", "Error");
+  } finally {
+    setUploading(false);
+  }
+};
 
-      await addDoc(collection(db, "fundingPosts"), postData);
-      showMessage("Your funding request has been posted!", "Success");
-
-      // Reset form
-      setApplicantName("");
-      setLocation("");
-      setCategory("");
-      setGoalAmount("");
-      setDaysRemaining("");
-      setDescription("");
-      setTeamMembers("");
-      setUseOfFunds("");
-      setLoanPurpose("");
-      setImage(null);
-    } catch (error) {
-      console.error("Error posting data:", error);
-      showMessage("Failed to create the post.", "Error");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
