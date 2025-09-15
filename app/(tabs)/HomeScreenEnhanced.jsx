@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -15,15 +14,14 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    // later: fetch from Kiva API or Firebase
     setLoading(false);
     
     // Animate impact stats
     const animateStats = () => {
       const targetStats = {
-        peopleReached: 1000,
-        loansFunded: 20000, //500 Dollars
-        repaymentRate: 86
+        peopleReached: 5000000,
+        loansFunded: 2000000000,
+        repaymentRate: 96
       };
       
       let currentStats = { ...targetStats };
@@ -61,7 +59,7 @@ export default function HomePage() {
     {
       id: 1,
       name: "Eufemia",
-      location: "Dominican Republic",
+      location: "Miami, U.S.",
       story: "With these funds, I was able to keep my family afloat. Now we don't really worry about food on the table, because business is thriving.",
       business: "Convenience store owner and refugee",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face"
@@ -69,7 +67,7 @@ export default function HomePage() {
     {
       id: 2,
       name: "Manal",
-      location: "Palestine",
+      location: "Denver, U.S.",
       story: "I used the funds to buy sewing machines and started running my business. I even employed my daughter, and my income increased.",
       business: "Tailor",
       image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
@@ -95,7 +93,7 @@ export default function HomePage() {
     {
       id: 1,
       name: "Sabina",
-      location: "Uganda",
+      location: "Denver, U.S.",
       business: "Food Market",
       category: "Refugees and IDPs",
       amount: 1125,
@@ -118,12 +116,12 @@ export default function HomePage() {
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
       {/* Hero Section */}
       <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>Finji</Text>
+        <Text style={styles.heroTitle}>Real people, real solutions</Text>
         <Text style={styles.heroSubtitle}>
           Lend as little as $25 to create a more equitable world.
         </Text>
         <TouchableOpacity style={styles.heroButton}>
-          <Text style={styles.heroButtonText}>Real people, real solutions</Text>
+          <Text style={styles.heroButtonText}>Start Lending Today</Text>
         </TouchableOpacity>
       </View>
 
@@ -237,47 +235,6 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* About Section */}
-      <View style={styles.aboutBox}>
-        <Text style={styles.sectionTitle}>About Finji</Text>
-        <Text style={styles.aboutText}>
-          Finji connects people who want to make a difference with borrowers around the world. 
-          By lending as little as $25, you help entrepreneurs, farmers, and families 
-          access opportunities that change their lives. 100% of your loan goes directly to funding dreams.
-        </Text>
-      </View>
-
-      {/* How It Works Section */}
-      <View style={styles.howItWorks}>
-        <Text style={styles.sectionTitle}>How it Works</Text>
-        <View style={styles.stepsContainer}>
-          <View style={styles.step}>
-            <View style={styles.stepIcon}>
-              <Ionicons name="search-outline" size={22} color="#1E88E5" />
-            </View>
-            <Text style={styles.stepText}>Browse borrowers and their stories</Text>
-          </View>
-          <View style={styles.step}>
-            <View style={styles.stepIcon}>
-              <Ionicons name="card-outline" size={22} color="#43A047" />
-            </View>
-            <Text style={styles.stepText}>Lend as little as $25 securely</Text>
-          </View>
-          <View style={styles.step}>
-            <View style={styles.stepIcon}>
-              <Ionicons name="reload-outline" size={22} color="#FB8C00" />
-            </View>
-            <Text style={styles.stepText}>Get repaid and re-lend to others</Text>
-          </View>
-          <View style={styles.step}>
-            <View style={styles.stepIcon}>
-              <Ionicons name="heart-outline" size={22} color="#D81B60" />
-            </View>
-            <Text style={styles.stepText}>See the real impact you've made</Text>
-          </View>
-        </View>
-      </View>
-
       {/* Trust Indicators */}
       <View style={styles.trustSection}>
         <Text style={styles.sectionTitle}>Give with Confidence</Text>
@@ -322,7 +279,7 @@ const styles = StyleSheet.create({
 
   // Hero Section
   heroSection: {
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundColor: '#667eea',
     padding: isWeb ? 60 : 40,
     borderRadius: 20,
     width: '100%',
@@ -330,20 +287,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: isWeb ? 30 : 20,
     ...(isWeb && {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
     }),
   },
   heroTitle: {
     fontSize: isWeb ? 42 : 32,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 15,
   },
   heroSubtitle: {
     fontSize: isWeb ? 20 : 16,
-    color: '#333',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 30,
     opacity: 0.9,
@@ -725,107 +681,6 @@ const styles = StyleSheet.create({
     color: '#667eea',
     fontWeight: 'bold',
     fontSize: isWeb ? 18 : 16,
-  },
-
-  // Existing styles
-  header: { 
-    padding: isWeb ? 40 : 20, 
-    alignItems: "center",
-    width: '100%',
-    maxWidth: isWeb ? 800 : '100%',
-  },
-  logo: { 
-    fontSize: isWeb ? 48 : 30, 
-    fontWeight: "bold", 
-    color: "#1E88E5",
-    textAlign: 'center',
-  },
-  tagline: { 
-    fontSize: isWeb ? 20 : 15, 
-    color: "#555", 
-    marginTop: isWeb ? 12 : 6, 
-    textAlign: "center",
-    maxWidth: isWeb ? 500 : '100%',
-  },
-
-  aboutBox: { 
-    backgroundColor: "#fff", 
-    marginVertical: isWeb ? 30 : 15, 
-    padding: isWeb ? 40 : 20, 
-    borderRadius: 16, 
-    width: "100%", 
-    maxWidth: isWeb ? 800 : "90%", 
-    alignItems: "center", 
-    shadowOpacity: 0.1, 
-    shadowRadius: 8, 
-    elevation: 4,
-    ...(isWeb && {
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-      cursor: 'default',
-      ':hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-      }
-    }),
-  },
-  aboutText: { 
-    fontSize: isWeb ? 16 : 14, 
-    color: "#444", 
-    marginTop: 15, 
-    lineHeight: isWeb ? 26 : 20, 
-    textAlign: "center",
-    maxWidth: isWeb ? 600 : '100%',
-  },
-
-  howItWorks: { 
-    backgroundColor: "#E8F5E9", 
-    marginVertical: isWeb ? 30 : 15, 
-    padding: isWeb ? 40 : 20, 
-    borderRadius: 16, 
-    width: "100%", 
-    maxWidth: isWeb ? 800 : "90%", 
-    alignItems: "center",
-    ...(isWeb && {
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-    }),
-  },
-  stepsContainer: {
-    width: '100%',
-    maxWidth: isWeb ? 600 : '100%',
-  },
-  step: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginVertical: isWeb ? 16 : 8,
-    paddingHorizontal: isWeb ? 20 : 10,
-    paddingVertical: isWeb ? 12 : 8,
-    backgroundColor: isWeb ? 'rgba(255,255,255,0.6)' : 'transparent',
-    borderRadius: isWeb ? 12 : 0,
-    ...(isWeb && {
-      transition: 'all 0.2s ease',
-      cursor: 'default',
-      ':hover': {
-        backgroundColor: 'rgba(255,255,255,0.8)',
-        transform: 'translateX(8px)',
-      }
-    }),
-  },
-  stepIcon: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    borderRadius: 25,
-    padding: 8,
-    marginRight: 15,
-    ...(isWeb && {
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    }),
-  },
-  stepText: { 
-    fontSize: isWeb ? 16 : 14, 
-    color: "#333", 
-    textAlign: "left",
-    flex: 1,
-    fontWeight: '500',
   },
 
   sectionTitle: { 

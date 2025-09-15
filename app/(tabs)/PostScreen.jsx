@@ -1,25 +1,30 @@
+import * as ImagePicker from "expo-image-picker";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
+    Alert,
+    Dimensions,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { db, storage } from "../../config/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import * as ImagePicker from "expo-image-picker";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+const { width: screenWidth } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
 
 // ✅ For web alerts
 const showMessage = (msg, type = "success") => {
-  if (Platform.OS === "web") {
+  if (isWeb) {
     alert(msg);
   } else {
-    import("react-native").then(({ Alert }) => Alert.alert(type, msg));
+    Alert.alert(type, msg);
   }
 };
 
@@ -38,7 +43,7 @@ const CreateFundingPostScreen = () => {
 
   // ✅ Pick Image (with Web fallback)
   const handleImagePick = async () => {
-    if (Platform.OS === "web") {
+    if (isWeb) {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
@@ -126,55 +131,60 @@ const CreateFundingPostScreen = () => {
   }
 };
 
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.header}>💰 Funding Request</Text>
 
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={applicantName}
-          onChangeText={setApplicantName}
-          placeholder="Your name or organization"
-        />
+        <View style={styles.formGrid}>
+          <View style={styles.formSection}>
+            <Text style={styles.label}>Name *</Text>
+            <TextInput
+              style={styles.input}
+              value={applicantName}
+              onChangeText={setApplicantName}
+              placeholder="Your name or organization"
+            />
 
-        <Text style={styles.label}>Location</Text>
-        <TextInput
-          style={styles.input}
-          value={location}
-          onChangeText={setLocation}
-          placeholder="City, Country"
-        />
+            <Text style={styles.label}>Location *</Text>
+            <TextInput
+              style={styles.input}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="City, Country"
+            />
 
-        <Text style={styles.label}>Business Category</Text>
-        <TextInput
-          style={styles.input}
-          value={category}
-          onChangeText={setCategory}
-          placeholder="e.g., Farming, Retail, Food"
-        />
+            <Text style={styles.label}>Business Category</Text>
+            <TextInput
+              style={styles.input}
+              value={category}
+              onChangeText={setCategory}
+              placeholder="e.g., Farming, Retail, Food"
+            />
+          </View>
 
-        <Text style={styles.label}>Funding Goal (USD)</Text>
-        <TextInput
-          style={styles.input}
-          value={goalAmount}
-          onChangeText={setGoalAmount}
-          keyboardType="numeric"
-          placeholder="e.g., 1000"
-        />
+          <View style={styles.formSection}>
+            <Text style={styles.label}>Funding Goal (USD) *</Text>
+            <TextInput
+              style={styles.input}
+              value={goalAmount}
+              onChangeText={setGoalAmount}
+              keyboardType="numeric"
+              placeholder="e.g., 1000"
+            />
 
-        <Text style={styles.label}>Days to Reach Goal</Text>
-        <TextInput
-          style={styles.input}
-          value={daysRemaining}
-          onChangeText={setDaysRemaining}
-          keyboardType="numeric"
-          placeholder="e.g., 30"
-        />
+            <Text style={styles.label}>Days to Reach Goal</Text>
+            <TextInput
+              style={styles.input}
+              value={daysRemaining}
+              onChangeText={setDaysRemaining}
+              keyboardType="numeric"
+              placeholder="e.g., 30"
+            />
+          </View>
+        </View>
 
-        <Text style={styles.label}>How Will the Funds Be Used?</Text>
+        <Text style={styles.label}>How Will the Funds Be Used? *</Text>
         <TextInput
           style={styles.inputMulti}
           value={useOfFunds}
@@ -183,7 +193,7 @@ const CreateFundingPostScreen = () => {
           placeholder="Describe how the money will help"
         />
 
-        <Text style={styles.label}>About You / Business</Text>
+        <Text style={styles.label}>About You / Business *</Text>
         <TextInput
           style={styles.inputMulti}
           value={description}
@@ -233,81 +243,146 @@ export default CreateFundingPostScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: isWeb ? 40 : 20,
     backgroundColor: "#f5f7fa",
     flexGrow: 1,
     alignItems: "center",
+    minHeight: isWeb ? '100vh' : undefined,
   },
   card: {
     backgroundColor: "#fff",
-    padding: 20,
+    padding: isWeb ? 40 : 20,
     borderRadius: 20,
     width: "100%",
-    maxWidth: 600,
+    maxWidth: isWeb ? 800 : 600,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
+    ...(isWeb && {
+      boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      cursor: 'default',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 12px 50px rgba(0,0,0,0.15)',
+      }
+    }),
   },
   header: {
-    fontSize: 26,
+    fontSize: isWeb ? 32 : 26,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: isWeb ? 30 : 20,
     color: "#2c3e50",
   },
+  formGrid: {
+    flexDirection: isWeb ? 'row' : 'column',
+    gap: isWeb ? 20 : 0,
+    marginBottom: 20,
+  },
+  formSection: {
+    flex: isWeb ? 1 : undefined,
+  },
   label: {
-    marginTop: 12,
+    marginTop: isWeb ? 20 : 12,
     fontWeight: "600",
-    fontSize: 15,
+    fontSize: isWeb ? 16 : 15,
     color: "#333",
   },
   input: {
     backgroundColor: "#fdfdfd",
     borderRadius: 12,
-    padding: 12,
+    padding: isWeb ? 16 : 12,
     borderWidth: 1,
     borderColor: "#ddd",
     marginTop: 6,
+    fontSize: isWeb ? 16 : undefined, // Prevent zoom on iOS
+    ...(isWeb && {
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+      cursor: 'text',
+      ':focus': {
+        borderColor: '#007bff',
+        boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
+      }
+    }),
   },
   inputMulti: {
     backgroundColor: "#fdfdfd",
     borderRadius: 12,
-    padding: 12,
+    padding: isWeb ? 16 : 12,
     borderWidth: 1,
     borderColor: "#ddd",
     marginTop: 6,
-    minHeight: 90,
+    minHeight: isWeb ? 120 : 90,
     textAlignVertical: "top",
+    fontSize: isWeb ? 16 : undefined, // Prevent zoom on iOS
+    ...(isWeb && {
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+      cursor: 'text',
+      resize: 'vertical',
+      ':focus': {
+        borderColor: '#007bff',
+        boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
+      }
+    }),
   },
   button: {
     backgroundColor: "#28a745",
-    padding: 16,
-    marginTop: 24,
+    padding: isWeb ? 20 : 16,
+    marginTop: isWeb ? 30 : 24,
     borderRadius: 12,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#218838',
+        transform: 'translateY(-1px)',
+        boxShadow: '0 4px 12px rgba(40,167,69,0.3)',
+      },
+      ':active': {
+        transform: 'translateY(0)',
+      }
+    }),
   },
   buttonText: {
     color: "white",
     fontWeight: "700",
-    fontSize: 16,
+    fontSize: isWeb ? 18 : 16,
   },
   imageButton: {
     marginTop: 10,
-    padding: 12,
+    padding: isWeb ? 16 : 12,
     backgroundColor: "#007bff",
     borderRadius: 10,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#0056b3',
+        transform: 'translateY(-1px)',
+      }
+    }),
   },
   imageButtonText: {
     color: "white",
     fontWeight: "600",
+    fontSize: isWeb ? 16 : 14,
   },
   imagePreview: {
     marginTop: 12,
-    height: 200,
+    height: isWeb ? 250 : 200,
     width: "100%",
     borderRadius: 12,
     resizeMode: "cover",
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease',
+      ':hover': {
+        transform: 'scale(1.02)',
+      }
+    }),
   },
 });

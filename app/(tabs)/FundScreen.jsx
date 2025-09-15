@@ -1,35 +1,53 @@
 // screens/FundingPostsScreen.js
+import { collection, doc, getDocs, increment, orderBy, query, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
   ActivityIndicator,
-  TouchableOpacity,
+  Alert,
+  Dimensions,
+  Image,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { db } from "../../config/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+
+const { width: screenWidth } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
 
 const FundingPostsScreen = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
   const [supportAmount, setSupportAmount] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("urgency"); // urgency, amount, recent
+
+  const categories = [
+    "All", "Women", "Refugees", "Climate", "Agriculture", "Education", 
+    "Health", "Retail", "Food", "Technology", "Arts", "Transportation"
+  ];
 
   const fetchPosts = async () => {
     try {
       const q = query(collection(db, "fundingPosts"), orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
-      const postList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        funded: doc.data().funded || 0, // default funded amount
-      }));
+      const postList = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          funded: data.funded || 0, // default funded amount
+          deadline: data.deadline ? new Date(data.deadline.toDate()) : null, // convert Firestore timestamp
+        };
+      });
       setPosts(postList);
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -42,10 +60,96 @@ const FundingPostsScreen = () => {
     fetchPosts();
   }, []);
 
-  const handleSupport = (amount) => {
-    alert(`Thank you for supporting with $${amount}!`);
-    setSupportAmount("");
-    setSelectedPost(null);
+  // Calculate remaining days
+  const calculateRemainingDays = (deadline) => {
+    if (!deadline) return null;
+    const now = new Date();
+    const timeDiff = deadline.getTime() - now.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return daysDiff > 0 ? daysDiff : 0;
+  };
+
+  // Filter and sort posts
+  const getFilteredAndSortedPosts = () => {
+    let filteredPosts = posts;
+    
+    // Filter by category
+    if (selectedCategory !== "All") {
+      filteredPosts = posts.filter(post => 
+        post.category && post.category.toLowerCase().includes(selectedCategory.toLowerCase())
+      );
+    }
+    
+    // Sort posts
+    switch (sortBy) {
+      case "urgency":
+        return filteredPosts.sort((a, b) => {
+          const daysA = calculateRemainingDays(a.deadline) || 999;
+          const daysB = calculateRemainingDays(b.deadline) || 999;
+          return daysA - daysB;
+        });
+      case "amount":
+        return filteredPosts.sort((a, b) => (b.goalAmount - b.funded) - (a.goalAmount - a.funded));
+      case "recent":
+        return filteredPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      default:
+        return filteredPosts;
+    }
+  };
+
+  // Handle support with database update
+  const handleSupport = async (amount) => {
+    if (!selectedPost || !amount || amount <= 0) {
+      if (isWeb) {
+        alert("Please enter a valid amount to support.");
+      } else {
+        Alert.alert("Invalid Amount", "Please enter a valid amount to support.");
+      }
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      // Update the funded amount in Firestore
+      const postRef = doc(db, "fundingPosts", selectedPost.id);
+      await updateDoc(postRef, {
+        funded: increment(parseFloat(amount))
+      });
+
+      // Update local state
+      const updatedPosts = posts.map(post => {
+        if (post.id === selectedPost.id) {
+          return {
+            ...post,
+            funded: post.funded + parseFloat(amount)
+          };
+        }
+        return post;
+      });
+      setPosts(updatedPosts);
+
+      // Update selected post for modal display
+      setSelectedPost(prev => ({
+        ...prev,
+        funded: prev.funded + parseFloat(amount)
+      }));
+
+      if (isWeb) {
+        alert(`Thank you for supporting with $${amount}!`);
+      } else {
+        Alert.alert("Success!", `Thank you for supporting with $${amount}!`);
+      }
+      setSupportAmount("");
+    } catch (error) {
+      console.error("Error updating support:", error);
+      if (isWeb) {
+        alert("Failed to process support. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to process support. Please try again.");
+      }
+    } finally {
+      setUpdating(false);
+    }
   };
 
   if (loading) {
@@ -56,49 +160,169 @@ const FundingPostsScreen = () => {
     );
   }
 
+  const filteredPosts = getFilteredAndSortedPosts();
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {posts.length === 0 ? (
-          <Text style={styles.noData}>No funding requests yet.</Text>
-        ) : (
-          posts.map((post) => {
-            const fundedPercent = (post.funded / post.goalAmount) * 100;
-            const remaining = post.goalAmount - post.funded;
+    <View style={styles.container}>
+      {/* Header Section */}
+      <View style={styles.headerSection}>
+        <Text style={styles.headerTitle}>Browse Loans</Text>
+        <Text style={styles.headerSubtitle}>Choose a person to support and make a difference</Text>
+      </View>
 
-            return (
-              <View key={post.id} style={styles.card}>
-                {post.imageUrl ? (
-                  <Image source={{ uri: post.imageUrl }} style={styles.image} />
-                ) : null}
-                <Text style={styles.name}>{post.applicantName}</Text>
-                <Text style={styles.detail}>📍 {post.location}</Text>
-                {post.category ? (
-                  <Text style={styles.tag}>{post.category}</Text>
-                ) : null}
-
-                {/* Progress bar */}
-                <View style={styles.progressContainer}>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      { width: `${fundedPercent}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.remainingText}>
-                  ${remaining} to go • {Math.round(fundedPercent)}% funded
+      {/* Filters and Sort Section */}
+      <View style={styles.filtersSection}>
+        <View style={styles.categoryFilters}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[
+                  styles.categoryFilter,
+                  selectedCategory === category && styles.categoryFilterActive
+                ]}
+                onPress={() => setSelectedCategory(category)}
+              >
+                <Text style={[
+                  styles.categoryFilterText,
+                  selectedCategory === category && styles.categoryFilterTextActive
+                ]}>
+                  {category}
                 </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-                <TouchableOpacity
-                  style={styles.viewButton}
-                  onPress={() => setSelectedPost(post)}
-                >
-                  <Text style={styles.viewText}>View Loan</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })
+        <View style={styles.sortSection}>
+          <Text style={styles.sortLabel}>Sort by:</Text>
+          <TouchableOpacity
+            style={[styles.sortButton, sortBy === "urgency" && styles.sortButtonActive]}
+            onPress={() => setSortBy("urgency")}
+          >
+            <Text style={[styles.sortButtonText, sortBy === "urgency" && styles.sortButtonTextActive]}>
+              Urgency
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sortButton, sortBy === "amount" && styles.sortButtonActive]}
+            onPress={() => setSortBy("amount")}
+          >
+            <Text style={[styles.sortButtonText, sortBy === "amount" && styles.sortButtonTextActive]}>
+              Amount
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sortButton, sortBy === "recent" && styles.sortButtonActive]}
+            onPress={() => setSortBy("recent")}
+          >
+            <Text style={[styles.sortButtonText, sortBy === "recent" && styles.sortButtonTextActive]}>
+              Recent
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {filteredPosts.length === 0 ? (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>🤝</Text>
+            <Text style={styles.noDataTitle}>No loans found</Text>
+            <Text style={styles.noDataText}>
+              {selectedCategory !== "All" 
+                ? `No loans available in the "${selectedCategory}" category.`
+                : "No funding requests available at the moment."
+              }
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.postsGrid}>
+            {filteredPosts.map((post) => {
+              const fundedPercent = (post.funded / post.goalAmount) * 100;
+              const remaining = post.goalAmount - post.funded;
+              const remainingDays = calculateRemainingDays(post.deadline);
+              const isUrgent = remainingDays !== null && remainingDays <= 7;
+              const isAlmostFunded = fundedPercent >= 80;
+
+              return (
+                <View key={post.id} style={[
+                  styles.card,
+                  isUrgent && styles.urgentCard,
+                  isAlmostFunded && styles.almostFundedCard
+                ]}>
+                  {/* Urgency Badge */}
+                  {isUrgent && (
+                    <View style={styles.urgencyBadge}>
+                      <Text style={styles.urgencyText}>🔥 URGENT</Text>
+                    </View>
+                  )}
+                  
+                  {/* Almost Funded Badge */}
+                  {isAlmostFunded && !isUrgent && (
+                    <View style={styles.almostFundedBadge}>
+                      <Text style={styles.almostFundedText}>🎯 Almost There!</Text>
+                    </View>
+                  )}
+
+                  {post.imageUrl ? (
+                    <Image source={{ uri: post.imageUrl }} style={styles.image} />
+                  ) : (
+                    <View style={styles.placeholderImage}>
+                      <Text style={styles.placeholderText}>📸</Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.cardContent}>
+                    <Text style={styles.name}>{post.applicantName}</Text>
+                    <Text style={styles.detail}>📍 {post.location}</Text>
+                    {post.category ? (
+                      <View style={styles.categoryContainer}>
+                        <Text style={styles.categoryTag}>{post.category}</Text>
+                      </View>
+                    ) : null}
+
+                    {/* Progress bar */}
+                    <View style={styles.progressContainer}>
+                      <View
+                        style={[
+                          styles.progressBar,
+                          { width: `${Math.min(fundedPercent, 100)}%` },
+                        ]}
+                      />
+                    </View>
+                    
+                    <View style={styles.progressInfo}>
+                      <Text style={styles.remainingText}>
+                        ${remaining.toLocaleString()} to go
+                      </Text>
+                      <Text style={styles.fundedPercent}>
+                        {Math.round(fundedPercent)}% funded
+                      </Text>
+                    </View>
+                    
+                    {/* Days remaining */}
+                    {remainingDays !== null && (
+                      <View style={styles.daysContainer}>
+                        <Text style={[
+                          styles.daysText,
+                          isUrgent && styles.urgentDaysText
+                        ]}>
+                          {remainingDays} days remaining
+                        </Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={() => setSelectedPost(post)}
+                    >
+                      <Text style={styles.viewText}>View Loan</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
         )}
       </ScrollView>
 
@@ -111,7 +335,7 @@ const FundingPostsScreen = () => {
           onRequestClose={() => setSelectedPost(null)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, isWeb && styles.modalContentWeb]}>
               <ScrollView>
                 {selectedPost.imageUrl && (
                   <Image
@@ -130,15 +354,16 @@ const FundingPostsScreen = () => {
                     style={[
                       styles.progressBar,
                       {
-                        width: `${
-                          (selectedPost.funded / selectedPost.goalAmount) * 100
-                        }%`,
+                        width: `${Math.min(
+                          (selectedPost.funded / selectedPost.goalAmount) * 100,
+                          100
+                        )}%`,
                       },
                     ]}
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {selectedPost.daysRemaining} days remaining • $
+                  {calculateRemainingDays(selectedPost.deadline) || 'No deadline'} days remaining • $
                   {selectedPost.goalAmount - selectedPost.funded} to go
                 </Text>
 
@@ -157,6 +382,7 @@ const FundingPostsScreen = () => {
                       key={amt}
                       style={styles.amountButton}
                       onPress={() => handleSupport(amt)}
+                      disabled={updating}
                     >
                       <Text style={styles.amountText}>${amt}</Text>
                     </TouchableOpacity>
@@ -168,13 +394,15 @@ const FundingPostsScreen = () => {
                   value={supportAmount}
                   onChangeText={setSupportAmount}
                   keyboardType="numeric"
+                  editable={!updating}
                 />
                 <TouchableOpacity
-                  style={styles.supportButton}
+                  style={[styles.supportButton, updating && styles.disabledButton]}
                   onPress={() => handleSupport(supportAmount || 0)}
+                  disabled={updating}
                 >
                   <Text style={styles.supportText}>
-                    Support {selectedPost.applicantName}
+                    {updating ? "Processing..." : `Support ${selectedPost.applicantName}`}
                   </Text>
                 </TouchableOpacity>
 
@@ -197,80 +425,322 @@ export default FundingPostsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    flex: 1,
+    backgroundColor: "#FAFAFA",
+  },
+  
+  // Header Section
+  headerSection: {
+    backgroundColor: '#667eea',
+    padding: isWeb ? 30 : 20,
+    alignItems: 'center',
+    ...(isWeb && {
+      boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+    }),
+  },
+  headerTitle: {
+    fontSize: isWeb ? 32 : 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: isWeb ? 16 : 14,
+    color: '#fff',
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+
+  // Filters Section
+  filtersSection: {
+    backgroundColor: '#fff',
+    padding: isWeb ? 20 : 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    ...(isWeb && {
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+    }),
+  },
+  categoryFilters: {
+    marginBottom: 15,
+  },
+  categoryFilter: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: isWeb ? 20 : 15,
+    paddingVertical: isWeb ? 12 : 10,
+    borderRadius: 25,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        backgroundColor: '#e8e8e8',
+      }
+    }),
+  },
+  categoryFilterActive: {
+    backgroundColor: '#667eea',
+    borderColor: '#667eea',
+  },
+  categoryFilterText: {
+    fontSize: isWeb ? 14 : 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  categoryFilterTextActive: {
+    color: '#fff',
+  },
+  sortSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  sortLabel: {
+    fontSize: isWeb ? 14 : 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  sortButton: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: isWeb ? 16 : 12,
+    paddingVertical: isWeb ? 8 : 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        backgroundColor: '#e8e8e8',
+      }
+    }),
+  },
+  sortButtonActive: {
+    backgroundColor: '#667eea',
+    borderColor: '#667eea',
+  },
+  sortButtonText: {
+    fontSize: isWeb ? 12 : 11,
+    color: '#666',
+    fontWeight: '500',
+  },
+  sortButtonTextActive: {
+    color: '#fff',
+  },
+
+  scrollContainer: {
+    padding: isWeb ? 20 : 15,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  noData: {
-    textAlign: "center",
+  
+  // No Data Container
+  noDataContainer: {
+    alignItems: 'center',
+    padding: isWeb ? 60 : 40,
     marginTop: 40,
-    fontSize: 16,
-    color: "#666",
+  },
+  noDataIcon: {
+    fontSize: isWeb ? 64 : 48,
+    marginBottom: 20,
+  },
+  noDataTitle: {
+    fontSize: isWeb ? 24 : 20,
+    fontWeight: 'bold',
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  noDataText: {
+    fontSize: isWeb ? 16 : 14,
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: isWeb ? 24 : 20,
+  },
+
+  postsGrid: {
+    flexDirection: isWeb ? 'row' : 'column',
+    flexWrap: isWeb ? 'wrap' : 'nowrap',
+    justifyContent: isWeb ? 'flex-start' : 'center',
+    gap: isWeb ? 20 : 0,
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    marginBottom: isWeb ? 0 : 20,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    width: isWeb ? (screenWidth > 1200 ? 350 : screenWidth > 768 ? 300 : 280) : '100%',
+    maxWidth: isWeb ? 400 : undefined,
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    overflow: 'hidden',
+    position: 'relative',
+    ...(isWeb && {
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      ':hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+      }
+    }),
   },
+  urgentCard: {
+    borderWidth: 2,
+    borderColor: '#e74c3c',
+    ...(isWeb && {
+      boxShadow: '0 4px 20px rgba(231, 76, 60, 0.2)',
+    }),
+  },
+  almostFundedCard: {
+    borderWidth: 2,
+    borderColor: '#f39c12',
+    ...(isWeb && {
+      boxShadow: '0 4px 20px rgba(243, 156, 18, 0.2)',
+    }),
+  },
+
+  // Badges
+  urgencyBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    zIndex: 1,
+  },
+  urgencyText: {
+    color: '#fff',
+    fontSize: isWeb ? 12 : 11,
+    fontWeight: 'bold',
+  },
+  almostFundedBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#f39c12',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    zIndex: 1,
+  },
+  almostFundedText: {
+    color: '#fff',
+    fontSize: isWeb ? 12 : 11,
+    fontWeight: 'bold',
+  },
+
   image: {
     width: "100%",
     height: 160,
-    borderRadius: 10,
-    marginBottom: 10,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  placeholderImage: {
+    width: "100%",
+    height: 160,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  placeholderText: {
+    fontSize: isWeb ? 48 : 40,
+    color: '#ccc',
+  },
+  cardContent: {
+    padding: isWeb ? 20 : 15,
   },
   name: {
-    fontSize: 18,
+    fontSize: isWeb ? 20 : 18,
     fontWeight: "bold",
+    color: '#333',
+    marginBottom: 8,
   },
   detail: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 2,
+    fontSize: isWeb ? 14 : 13,
+    color: "#666",
+    marginBottom: 10,
   },
-  tag: {
-    backgroundColor: "#eee",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  categoryContainer: {
+    marginBottom: 15,
+  },
+  categoryTag: {
+    backgroundColor: "#667eea",
+    color: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     alignSelf: "flex-start",
-    fontSize: 13,
-    marginVertical: 4,
+    fontSize: isWeb ? 12 : 11,
+    fontWeight: '600',
   },
   progressContainer: {
-    backgroundColor: "#eee",
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     height: 8,
-    marginTop: 8,
+    marginBottom: 10,
   },
   progressBar: {
     backgroundColor: "#28a745",
     height: 8,
     borderRadius: 8,
   },
+  progressInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   remainingText: {
-    marginTop: 6,
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#444",
+    fontSize: isWeb ? 14 : 13,
+    fontWeight: "600",
+    color: "#333",
+  },
+  fundedPercent: {
+    fontSize: isWeb ? 12 : 11,
+    color: "#666",
+    fontWeight: '500',
+  },
+  daysContainer: {
+    marginBottom: 15,
+  },
+  daysText: {
+    fontSize: isWeb ? 12 : 11,
+    color: "#666",
+    fontStyle: "italic",
+  },
+  urgentDaysText: {
+    color: '#e74c3c',
+    fontWeight: 'bold',
   },
   viewButton: {
-    marginTop: 10,
     backgroundColor: "#28a745",
-    padding: 10,
+    padding: isWeb ? 14 : 12,
     borderRadius: 8,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'background-color 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#218838',
+      }
+    }),
   },
   viewText: {
     color: "#fff",
     fontWeight: "600",
+    fontSize: isWeb ? 14 : 13,
   },
 
   // Modal
@@ -278,13 +748,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    padding: 10,
+    padding: isWeb ? 20 : 10,
   },
   modalContent: {
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 15,
     maxHeight: "90%",
+  },
+  modalContentWeb: {
+    maxWidth: 600,
+    width: '100%',
+    margin: '0 auto',
+    maxHeight: '80vh',
   },
   modalImage: {
     width: "100%",
@@ -318,14 +794,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginVertical: 12,
+    gap: 10,
   },
   amountButton: {
     flex: 1,
     backgroundColor: "#eee",
     padding: 12,
-    marginHorizontal: 5,
     borderRadius: 8,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'background-color 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#ddd',
+      }
+    }),
   },
   amountText: {
     fontSize: 15,
@@ -337,12 +820,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 12,
+    fontSize: isWeb ? 16 : undefined, // Prevent zoom on iOS
   },
   supportButton: {
     backgroundColor: "#28a745",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'background-color 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#218838',
+      }
+    }),
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
   },
   supportText: {
     color: "#fff",
@@ -355,5 +849,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'background-color 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#666',
+      }
+    }),
   },
 });

@@ -1,20 +1,21 @@
 // src/navigation/StackLayout.jsx
-import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import HomeScreen from "./HomeScreen";
-import FundScreen from "./FundScreen";
-import PostScreen from "./PostScreen";
-import LoginRegister from './index';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { useNavigation } from '@react-navigation/native';
+import { createStackNavigator } from "@react-navigation/stack";
+import { signOut } from 'firebase/auth';
+import React from "react";
+import { Alert, Platform } from 'react-native';
+import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
 import { useColorScheme } from "../../hooks/useColorScheme";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { signOut } from 'firebase/auth';
-import { Alert } from 'react-native';
-import { auth } from "../../config/firebase";
+import FundScreen from "./FundScreen";
+import HomeScreen from "./HomeScreen";
+import PostScreen from "./PostScreen";
+import LoginRegister from './index';
 
+const isWeb = Platform.OS === 'web';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,6 +33,18 @@ const BottomTabs = () => {
         tabBarInactiveTintColor: "gray",
         tabBarStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].background,
+          ...(isWeb && {
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 70,
+            paddingBottom: 10,
+            paddingTop: 10,
+            borderTopWidth: 1,
+            borderTopColor: '#e0e0e0',
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+          }),
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -46,6 +59,13 @@ const BottomTabs = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        ...(isWeb && {
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+            marginTop: 4,
+          },
+        }),
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -70,12 +90,34 @@ const DrawerNavigator = () => {
       })
       .catch((err) => {
         console.error("Logout Error:", err);
-        Alert.alert("Error", "Failed to logout. Please try again.");
+        if (isWeb) {
+          alert("Failed to logout. Please try again.");
+        } else {
+          Alert.alert("Error", "Failed to logout. Please try again.");
+        }
       });
   };
 
   return (
-    <Drawer.Navigator initialRouteName="MainTabs">
+    <Drawer.Navigator 
+      initialRouteName="MainTabs" 
+      screenOptions={{
+        ...(isWeb && {
+          drawerStyle: {
+            width: 280,
+            backgroundColor: '#fff',
+            boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+          },
+          drawerLabelStyle: {
+            fontSize: 16,
+            fontWeight: '500',
+            color: '#333',
+          },
+          drawerActiveBackgroundColor: '#e6f0ff',
+          drawerActiveTintColor: '#007bff',
+        }),
+      }}
+    >
       <Drawer.Screen name="MainTabs" component={BottomTabs} options={{ title: 'Home' }} />
       
       <Drawer.Screen
@@ -108,6 +150,9 @@ export default function StackLayout() {
         headerShown: false,
         contentStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].background,
+          ...(isWeb && {
+            minHeight: '100vh',
+          }),
         },
       }}
     >

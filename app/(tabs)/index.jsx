@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, ActivityIndicator, Alert
-} from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../../config/firebase';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import {
+    ActivityIndicator, Alert,
+    Dimensions,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text, TextInput, TouchableOpacity,
+    View
+} from 'react-native';
+import { auth } from '../../config/firebase';
+
+const { width: screenWidth } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
 
 export default function AuthPage() {
   const navigation = useNavigation();
@@ -34,7 +42,12 @@ export default function AuthPage() {
 
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
-      return Alert.alert('Error', 'Please fill all fields.');
+      if (isWeb) {
+        alert('Please fill all fields.');
+      } else {
+        Alert.alert('Error', 'Please fill all fields.');
+      }
+      return;
     }
     setIsLoading(true);
     try {
@@ -42,13 +55,22 @@ export default function AuthPage() {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Login Failed', error.message);
+      if (isWeb) {
+        alert('Login Failed: ' + error.message);
+      } else {
+        Alert.alert('Login Failed', error.message);
+      }
     }
   };
 
   const handleRegister = async () => {
     if (!registerName || !registerEmail || !registerPassword) {
-      return Alert.alert('Error', 'Please fill all fields.');
+      if (isWeb) {
+        alert('Please fill all fields.');
+      } else {
+        Alert.alert('Error', 'Please fill all fields.');
+      }
+      return;
     }
     setIsLoading(true);
     try {
@@ -59,7 +81,11 @@ export default function AuthPage() {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      Alert.alert('Registration Failed', error.message);
+      if (isWeb) {
+        alert('Registration Failed: ' + error.message);
+      } else {
+        Alert.alert('Registration Failed', error.message);
+      }
     }
   };
 
@@ -71,96 +97,98 @@ export default function AuthPage() {
       ]}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.iconContainer}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.icon}>🛡️</Text>
+      <View style={styles.contentWrapper}>
+        <View style={styles.iconContainer}>
+          <View style={styles.iconCircle}>
+            <Text style={styles.icon}>🛡️</Text>
+          </View>
         </View>
-      </View>
-      <Text style={[styles.title, isDarkMode && { color: '#fff' }]}>
-        Welcome to Finji
-      </Text>
+        <Text style={[styles.title, isDarkMode && { color: '#fff' }]}>
+          Welcome to Finji
+        </Text>
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          onPress={() => setMode('login')}
-          style={[styles.tab, mode === 'login' && styles.activeTabBackground]}
-        >
-          <Text style={[styles.tabText, mode === 'login' && styles.activeTabText]}>Login</Text>
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            onPress={() => setMode('login')}
+            style={[styles.tab, mode === 'login' && styles.activeTabBackground]}
+          >
+            <Text style={[styles.tabText, mode === 'login' && styles.activeTabText]}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setMode('register')}
+            style={[styles.tab, mode === 'register' && styles.activeTabBackground]}
+          >
+            <Text style={[styles.tabText, mode === 'register' && styles.activeTabText]}>Register</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Forms */}
+        {mode === 'login' ? (
+          <View style={styles.form}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              placeholder="name@example.com"
+              style={styles.input}
+              value={loginEmail}
+              onChangeText={setLoginEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              placeholder="••••••••"
+              secureTextEntry
+              style={styles.input}
+              value={loginPassword}
+              onChangeText={setLoginPassword}
+            />
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogin} style={styles.button} disabled={isLoading}>
+              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign in</Text>}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.form}>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput
+              placeholder="John Doe"
+              style={styles.input}
+              value={registerName}
+              onChangeText={setRegisterName}
+            />
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              placeholder="name@example.com"
+              style={styles.input}
+              value={registerEmail}
+              onChangeText={setRegisterEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              placeholder="••••••••"
+              secureTextEntry
+              style={styles.input}
+              value={registerPassword}
+              onChangeText={setRegisterPassword}
+            />
+            <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={isLoading}>
+              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* OAuth Buttons */}
+        <OAuthButtons />
+
+        <TouchableOpacity>
+          <Text style={styles.privacyPolicy}>Privacy Policy.</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setMode('register')}
-          style={[styles.tab, mode === 'register' && styles.activeTabBackground]}
-        >
-          <Text style={[styles.tabText, mode === 'register' && styles.activeTabText]}>Register</Text>
-        </TouchableOpacity>
       </View>
-
-      {/* Forms */}
-      {mode === 'login' ? (
-        <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            placeholder="name@example.com"
-            style={styles.input}
-            value={loginEmail}
-            onChangeText={setLoginEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            placeholder="••••••••"
-            secureTextEntry
-            style={styles.input}
-            value={loginPassword}
-            onChangeText={setLoginPassword}
-          />
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogin} style={styles.button} disabled={isLoading}>
-            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign in</Text>}
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.form}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            placeholder="John Doe"
-            style={styles.input}
-            value={registerName}
-            onChangeText={setRegisterName}
-          />
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            placeholder="name@example.com"
-            style={styles.input}
-            value={registerEmail}
-            onChangeText={setRegisterEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            placeholder="••••••••"
-            secureTextEntry
-            style={styles.input}
-            value={registerPassword}
-            onChangeText={setRegisterPassword}
-          />
-          <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={isLoading}>
-            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* OAuth Buttons */}
-      <OAuthButtons />
-
-      <TouchableOpacity>
-        <Text style={styles.privacyPolicy}>Privacy Policy.</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -186,49 +214,71 @@ function OAuthButtons() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    paddingTop: 60,
+    padding: isWeb ? 40 : 24,
+    paddingTop: isWeb ? 80 : 60,
     backgroundColor: '#fff',
     minHeight: '100%',
   },
+  contentWrapper: {
+    maxWidth: isWeb ? 500 : '100%',
+    width: '100%',
+    alignSelf: 'center',
+  },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: isWeb ? 24 : 16,
   },
   iconCircle: {
     backgroundColor: '#e6f0ff',
-    padding: 12,
+    padding: isWeb ? 16 : 12,
     borderRadius: 999,
+    ...(isWeb && {
+      transition: 'transform 0.2s ease',
+      cursor: 'default',
+      ':hover': {
+        transform: 'scale(1.05)',
+      }
+    }),
   },
   icon: {
-    fontSize: 32,
+    fontSize: isWeb ? 40 : 32,
     color: '#007bff',
   },
   title: {
-    fontSize: 24,
+    fontSize: isWeb ? 32 : 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: isWeb ? 40 : 30,
   },
   
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: isWeb ? 32 : 24,
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
+    ...(isWeb && {
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    }),
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: isWeb ? 16 : 12,
     alignItems: 'center',
     borderRadius: 12,
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#e0e0e0',
+      }
+    }),
   },
   activeTabBackground: {
     backgroundColor: '#e6f0ff',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: isWeb ? 18 : 16,
     color: '#6c757d',
     fontWeight: '600',
   },
@@ -236,53 +286,91 @@ const styles = StyleSheet.create({
     color: '#007bff',
   },
   label: {
-    marginBottom: 6,
+    marginBottom: isWeb ? 8 : 6,
     fontWeight: '500',
     color: '#212529',
+    fontSize: isWeb ? 16 : 14,
   },
   form: {
-    marginBottom: 30,
+    marginBottom: isWeb ? 40 : 30,
   },
   input: {
     backgroundColor: '#fff',
-    padding: 12,
+    padding: isWeb ? 16 : 12,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: isWeb ? 16 : 12,
     borderWidth: 1,
     borderColor: '#ced4da',
-    fontSize: 16,
+    fontSize: isWeb ? 16 : 16,
+    ...(isWeb && {
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+      cursor: 'text',
+      ':focus': {
+        borderColor: '#007bff',
+        boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
+      }
+    }),
   },
   forgotPassword: {
     alignItems: 'flex-end',
-    marginBottom: 16,
+    marginBottom: isWeb ? 20 : 16,
   },
   forgotPasswordText: {
     color: '#007bff',
-    fontSize: 13,
+    fontSize: isWeb ? 14 : 13,
+    cursor: isWeb ? 'pointer' : 'default',
+    ...(isWeb && {
+      transition: 'color 0.2s ease',
+      ':hover': {
+        color: '#0056b3',
+        textDecoration: 'underline',
+      }
+    }),
   },
   button: {
     backgroundColor: '#cce0ff',
-    padding: 14,
+    padding: isWeb ? 18 : 14,
     borderRadius: 8,
     alignItems: 'center',
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#b3d9ff',
+        transform: 'translateY(-1px)',
+        boxShadow: '0 4px 12px rgba(0,123,255,0.2)',
+      },
+      ':active': {
+        transform: 'translateY(0)',
+      }
+    }),
   },
   buttonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: isWeb ? 18 : 16,
   },
   oauthButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#dee2e6',
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: isWeb ? 14 : 12,
+    paddingHorizontal: isWeb ? 12 : 10,
     flex: 1,
     alignItems: 'center',
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#f8f9fa',
+        borderColor: '#007bff',
+        transform: 'translateY(-1px)',
+      }
+    }),
   },
   oauthButtonText: {
-    fontSize: 14,
+    fontSize: isWeb ? 15 : 14,
     fontWeight: '600',
     color: '#343a40',
   },
@@ -295,8 +383,15 @@ const styles = StyleSheet.create({
   privacyPolicy: {
     textAlign: 'center',
     marginTop: 4,
-    fontSize: 12,
+    fontSize: isWeb ? 13 : 12,
     color: '#007bff',
     textDecorationLine: 'underline',
+    cursor: isWeb ? 'pointer' : 'default',
+    ...(isWeb && {
+      transition: 'color 0.2s ease',
+      ':hover': {
+        color: '#0056b3',
+      }
+    }),
   },
 });
