@@ -95,7 +95,7 @@ export default function HomePage() {
       name: "Sabina",
       location: "Denver, U.S.",
       business: "Food Market",
-      category: "Refugees and IDPs",
+      category: "Food & Beverage",
       amount: 1125,
       remaining: 70,
       image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=150&fit=crop"
@@ -103,7 +103,7 @@ export default function HomePage() {
     {
       id: 2,
       name: "Angel Forrest",
-      location: "Mexico",
+      location: "Los Angeles, U.S.",
       business: "Phone Repair",
       category: "Eco-friendly",
       amount: 275,
@@ -162,7 +162,7 @@ export default function HomePage() {
                 </TouchableOpacity>
               </View>
             </View>
-          ))}
+          ))}Almost there! Fund the last few dollars they need
         </View>
       </View>
 
