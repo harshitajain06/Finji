@@ -61,7 +61,7 @@ export default function HomePage() {
     {
       id: 1,
       name: "Eufemia",
-      location: "Dominican Republic",
+      location: "Miami, U.S.",
       story: "With these funds, I was able to keep my family afloat. Now we don't really worry about food on the table, because business is thriving.",
       business: "Convenience store owner and refugee",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face"
@@ -69,7 +69,7 @@ export default function HomePage() {
     {
       id: 2,
       name: "Manal",
-      location: "Palestine",
+      location: "Denver, U.S.",
       story: "I used the funds to buy sewing machines and started running my business. I even employed my daughter, and my income increased.",
       business: "Tailor",
       image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
@@ -97,7 +97,7 @@ export default function HomePage() {
       name: "Sabina",
       location: "Uganda",
       business: "Food Market",
-      category: "Refugees and IDPs",
+      category: "Food & Beverage",
       amount: 1125,
       remaining: 70,
       image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=150&fit=crop"
@@ -105,7 +105,7 @@ export default function HomePage() {
     {
       id: 2,
       name: "Angel Forrest",
-      location: "Mexico",
+      location: "Los Angeles, U.S.",
       business: "Phone Repair",
       category: "Eco-friendly",
       amount: 275,
