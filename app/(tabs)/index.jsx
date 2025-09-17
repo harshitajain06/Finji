@@ -4,13 +4,14 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfi
 import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {
-    ActivityIndicator, Alert,
-    Dimensions,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text, TextInput, TouchableOpacity,
-    View
+  ActivityIndicator, Alert,
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View
 } from 'react-native';
 import { auth } from '../../config/firebase';
 
@@ -99,8 +100,12 @@ export default function AuthPage() {
     >
       <View style={styles.contentWrapper}>
         <View style={styles.iconContainer}>
-          <View style={styles.iconCircle}>
-            <Text style={styles.icon}>🛡️</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/images/Logo.jpeg')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
         </View>
         <Text style={[styles.title, isDarkMode && { color: '#fff' }]}>
@@ -228,7 +233,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: isWeb ? 24 : 16,
   },
-  iconCircle: {
+  logoContainer: {
     backgroundColor: '#e6f0ff',
     padding: isWeb ? 16 : 12,
     borderRadius: 999,
@@ -240,9 +245,10 @@ const styles = StyleSheet.create({
       }
     }),
   },
-  icon: {
-    fontSize: isWeb ? 40 : 32,
-    color: '#007bff',
+  logo: {
+    width: isWeb ? 80 : 64,
+    height: isWeb ? 80 : 64,
+    borderRadius: isWeb ? 40 : 32,
   },
   title: {
     fontSize: isWeb ? 32 : 24,
