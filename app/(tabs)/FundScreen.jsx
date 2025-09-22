@@ -31,7 +31,7 @@ const FundingPostsScreen = () => {
   const [sortBy, setSortBy] = useState("urgency"); // urgency, amount, recent
 
   const categories = [
-    "All", "Women", "Refugees", "Climate", "Agriculture", "Education", 
+    "All", "Women", "Climate", "Agriculture", "Education", 
     "Health", "Retail", "Food", "Technology", "Arts", "Transportation"
   ];
 

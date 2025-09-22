@@ -1,19 +1,20 @@
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, reload, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {
-  ActivityIndicator, Alert,
-  Dimensions,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text, TextInput, TouchableOpacity,
-  View
+    ActivityIndicator, Alert,
+    Dimensions,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text, TextInput, TouchableOpacity,
+    View
 } from 'react-native';
 import { auth } from '../../config/firebase';
+import { useUserRole } from '../../contexts/UserRoleContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -22,6 +23,7 @@ export default function AuthPage() {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+  const { setUserRole } = useUserRole();
 
   const [user, loading, error] = useAuthState(auth);
 
@@ -34,10 +36,14 @@ export default function AuthPage() {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerRole, setRegisterRole] = useState('applicant');
 
   useEffect(() => {
     if (user) {
-      navigation.replace('Drawer');
+      // Add a small delay to ensure profile is fully updated
+      setTimeout(() => {
+        navigation.replace('Drawer');
+      }, 100);
     }
   }, [user]);
 
@@ -78,10 +84,23 @@ export default function AuthPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
       await updateProfile(userCredential.user, {
         displayName: registerName,
+        photoURL: registerRole, // Using photoURL to store role temporarily
       });
+      
+      // Reload user to ensure profile changes are reflected
+      await reload(userCredential.user);
+      
+      
+      // Immediately set the role in context for instant UI update
+      setUserRole(registerRole);
+      
+      // Force a small delay to ensure the profile is fully updated
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
+      console.error('Registration error:', error);
       if (isWeb) {
         alert('Registration Failed: ' + error.message);
       } else {
@@ -181,6 +200,25 @@ export default function AuthPage() {
               value={registerPassword}
               onChangeText={setRegisterPassword}
             />
+            <Text style={styles.label}>Role</Text>
+            <View style={styles.roleContainer}>
+              <TouchableOpacity
+                onPress={() => setRegisterRole('investor')}
+                style={[styles.roleButton, registerRole === 'investor' && styles.activeRoleButton]}
+              >
+                <Text style={[styles.roleButtonText, registerRole === 'investor' && styles.activeRoleButtonText]}>
+                  Investor
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setRegisterRole('applicant')}
+                style={[styles.roleButton, registerRole === 'applicant' && styles.activeRoleButton]}
+              >
+                <Text style={[styles.roleButtonText, registerRole === 'applicant' && styles.activeRoleButtonText]}>
+                  Applicant
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
             </TouchableOpacity>
@@ -399,5 +437,37 @@ const styles = StyleSheet.create({
         color: '#0056b3',
       }
     }),
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    marginBottom: isWeb ? 16 : 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 4,
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: isWeb ? 12 : 10,
+    paddingHorizontal: isWeb ? 16 : 12,
+    alignItems: 'center',
+    borderRadius: 6,
+    cursor: isWeb ? 'pointer' : 'default',
+    transition: isWeb ? 'all 0.2s ease' : undefined,
+    ...(isWeb && {
+      ':hover': {
+        backgroundColor: '#e0e0e0',
+      }
+    }),
+  },
+  activeRoleButton: {
+    backgroundColor: '#e6f0ff',
+  },
+  roleButtonText: {
+    fontSize: isWeb ? 14 : 13,
+    color: '#6c757d',
+    fontWeight: '600',
+  },
+  activeRoleButtonText: {
+    color: '#007bff',
   },
 });

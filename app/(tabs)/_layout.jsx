@@ -9,6 +9,7 @@ import React from "react";
 import { Alert, Platform } from 'react-native';
 import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
+import { useUserRole } from "../../contexts/UserRoleContext";
 import { useColorScheme } from "../../hooks/useColorScheme";
 import FundScreen from "./FundScreen";
 import HomeScreen from "./HomeScreen";
@@ -24,9 +25,20 @@ const Drawer = createDrawerNavigator();
 // Bottom Tab Navigator Component
 const BottomTabs = () => {
   const colorScheme = useColorScheme();
+  const { userRole, isLoading, user } = useUserRole();
+
+
+  // Show loading state while determining user role
+  if (isLoading) {
+    return null; // or a loading component
+  }
+
+  // Force re-render when user role changes by using it in the component key
+  const componentKey = `${user?.uid}-${userRole}`;
 
   return (
     <Tab.Navigator
+      key={componentKey} // Force re-render when user role changes
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
@@ -69,12 +81,15 @@ const BottomTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Fund" component={FundScreen} options={{ title: "Fund" }} />
-      <Tab.Screen
-        name="Post"
-        component={PostScreen}
-        options={{ title: "Post" }}
-      />
+      {userRole === 'investor' ? (
+        <Tab.Screen name="Fund" component={FundScreen} options={{ title: "Fund" }} />
+      ) : (
+        <Tab.Screen
+          name="Post"
+          component={PostScreen}
+          options={{ title: "Post" }}
+        />
+      )}
     </Tab.Navigator>
   );
 };
@@ -82,21 +97,30 @@ const BottomTabs = () => {
 // Drawer Navigator Component
 const DrawerNavigator = () => {
   const navigation = useNavigation();
+  const { userRole, isLoading } = useUserRole();
 
-  const handleLogout = () => {
-    signOut(auth)
-      .then(() => {
-        navigation.replace("LoginRegister");
-      })
-      .catch((err) => {
-        console.error("Logout Error:", err);
-        if (isWeb) {
-          alert("Failed to logout. Please try again.");
-        } else {
-          Alert.alert("Error", "Failed to logout. Please try again.");
-        }
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // Use reset instead of replace to clear the entire navigation stack
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'LoginRegister' }],
       });
+    } catch (err) {
+      console.error("Logout Error:", err);
+      if (isWeb) {
+        alert("Failed to logout. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to logout. Please try again.");
+      }
+    }
   };
+
+  // Show loading state while determining user role
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Drawer.Navigator 
@@ -118,11 +142,17 @@ const DrawerNavigator = () => {
         }),
       }}
     >
-      <Drawer.Screen name="MainTabs" component={BottomTabs} options={{ title: 'Home' }} />
+      <Drawer.Screen 
+        name="MainTabs" 
+        component={BottomTabs} 
+        options={{ 
+          title: `Home (${userRole === 'investor' ? 'Investor' : 'Applicant'})` 
+        }} 
+      />
       
       <Drawer.Screen
         name="Logout"
-        component={BottomTabs}
+        component={() => null}
         options={{
           title: 'Logout',
           drawerIcon: ({ color, size }) => (

@@ -95,7 +95,7 @@ export default function HomePage() {
     {
       id: 1,
       name: "Sabina",
-      location: "Uganda",
+      location: "Seattle, U.S.",
       business: "Food Market",
       category: "Food & Beverage",
       amount: 1125,
@@ -216,22 +216,36 @@ export default function HomePage() {
         
         <View style={styles.relendVisual}>
           <View style={styles.relendStep}>
-            <View style={styles.relendIcon}>💰</View>
+            <View style={styles.relendIcon}>
+              <Text style={{ fontSize: 20 }}>💰</Text>
+            </View>
             <Text style={styles.relendStepText}>Lend $25</Text>
           </View>
-          <View style={styles.relendArrow}>→</View>
+          <View style={styles.relendArrow}>
+            <Text style={{ fontSize: 16 }}>→</Text>
+          </View>
           <View style={styles.relendStep}>
-            <View style={styles.relendIcon}>🌍</View>
+            <View style={styles.relendIcon}>
+              <Text style={{ fontSize: 20 }}>🌍</Text>
+            </View>
             <Text style={styles.relendStepText}>Help someone</Text>
           </View>
-          <View style={styles.relendArrow}>→</View>
+          <View style={styles.relendArrow}>
+            <Text style={{ fontSize: 16 }}>→</Text>
+          </View>
           <View style={styles.relendStep}>
-            <View style={styles.relendIcon}>🔄</View>
+            <View style={styles.relendIcon}>
+              <Text style={{ fontSize: 20 }}>🔄</Text>
+            </View>
             <Text style={styles.relendStepText}>Get repaid</Text>
           </View>
-          <View style={styles.relendArrow}>→</View>
+          <View style={styles.relendArrow}>
+            <Text style={{ fontSize: 16 }}>→</Text>
+          </View>
           <View style={styles.relendStep}>
-            <View style={styles.relendIcon}>💝</View>
+            <View style={styles.relendIcon}>
+              <Text style={{ fontSize: 20 }}>💝</Text>
+            </View>
             <Text style={styles.relendStepText}>Relend again</Text>
           </View>
         </View>
@@ -319,6 +333,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: isWeb ? 40 : 20,
     paddingBottom: isWeb ? 60 : 40,
   },
+  
 
   // Hero Section
   heroSection: {
