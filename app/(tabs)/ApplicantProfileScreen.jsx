@@ -1,14 +1,14 @@
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Image,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -34,20 +34,18 @@ const ApplicantProfileScreen = () => {
     try {
       setLoading(true);
       
-      // Fetch posts created by this applicant
-      // Use a single query approach to minimize index requirements
-      let allPosts = [];
+      // Fetch posts created by this applicant using userId
+      let userPosts = [];
       
-      // Try to find posts by applicantEmail first
-      if (user?.email) {
+      if (user?.uid) {
         try {
-          const q1 = query(
+          const q = query(
             collection(db, "fundingPosts"), 
-            where("applicantEmail", "==", user.email),
+            where("userId", "==", user.uid),
             orderBy("createdAt", "desc")
           );
-          const snapshot1 = await getDocs(q1);
-          allPosts = snapshot1.docs.map((doc) => {
+          const snapshot = await getDocs(q);
+          userPosts = snapshot.docs.map((doc) => {
             const data = doc.data();
             return {
               id: doc.id,
@@ -58,100 +56,8 @@ const ApplicantProfileScreen = () => {
             };
           });
         } catch (error) {
-          console.log("Query by email failed, trying alternative approach:", error.message);
+          console.log("Query by userId failed:", error.message);
         }
-      }
-      
-      // If no posts found by email, try by display name
-      if (allPosts.length === 0 && user?.displayName) {
-        try {
-          const q2 = query(
-            collection(db, "fundingPosts"), 
-            where("applicantName", "==", user.displayName),
-            orderBy("createdAt", "desc")
-          );
-          const snapshot2 = await getDocs(q2);
-          allPosts = snapshot2.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              funded: data.funded || 0,
-              deadline: data.deadline ? new Date(data.deadline.toDate()) : null,
-              createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-            };
-          });
-        } catch (error) {
-          console.log("Query by name failed, trying alternative approach:", error.message);
-        }
-      }
-      
-      // If still no posts found, get all posts and filter by user (for demo purposes)
-      if (allPosts.length === 0) {
-        try {
-          const q3 = query(
-            collection(db, "fundingPosts"), 
-            orderBy("createdAt", "desc")
-          );
-          const snapshot3 = await getDocs(q3);
-          allPosts = snapshot3.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              funded: data.funded || 0,
-              deadline: data.deadline ? new Date(data.deadline.toDate()) : null,
-              createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-            };
-          });
-        } catch (error) {
-          console.log("Query all posts failed:", error.message);
-          allPosts = [];
-        }
-      }
-
-      // Filter posts that belong to this user (for demo, we'll show posts with funding)
-      // In a real app, you'd have proper user-post relationships
-      let userPosts = allPosts.filter(post => 
-        post.funded > 0 && (
-          post.applicantEmail === user?.email || 
-          post.applicantName === user?.displayName
-        )
-      );
-
-      // If no posts found for this user, show some funded posts for demo purposes
-      if (userPosts.length === 0) {
-        userPosts = allPosts.filter(post => post.funded > 0).slice(0, 3); // Show up to 3 funded posts
-      }
-
-      // If still no posts, create some sample data for demonstration
-      if (userPosts.length === 0) {
-        userPosts = [
-          {
-            id: 'demo-post-1',
-            applicantName: user?.displayName || 'Demo Applicant',
-            category: 'Technology',
-            location: 'San Francisco, CA',
-            description: 'Building an innovative mobile app for sustainable living',
-            goalAmount: 5000,
-            funded: 3200,
-            imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
-            createdAt: new Date(),
-            deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          },
-          {
-            id: 'demo-post-2',
-            applicantName: user?.displayName || 'Demo Applicant',
-            category: 'Agriculture',
-            location: 'Austin, TX',
-            description: 'Sustainable farming initiative to help local communities',
-            goalAmount: 8000,
-            funded: 5600,
-            imageUrl: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400',
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-            deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000)
-          }
-        ];
       }
 
       setMyPosts(userPosts);
@@ -161,14 +67,13 @@ const ApplicantProfileScreen = () => {
       setTotalFunding(total);
       setTotalPosts(userPosts.length);
 
-      // Generate realistic investor data
-      const simulatedInvestors = generateSimulatedInvestors(userPosts);
-      setInvestorData(simulatedInvestors);
+      // Fetch investor data for each post
+      await fetchInvestorData(userPosts);
       
       console.log('Applicant Profile Data:', {
         userPosts: userPosts.length,
         totalFunding: total,
-        investorData: Object.keys(simulatedInvestors).length
+        userId: user?.uid
       });
       
     } catch (error) {
@@ -178,71 +83,49 @@ const ApplicantProfileScreen = () => {
     }
   };
 
-  // Generate simulated investor data for demonstration
-  const generateSimulatedInvestors = (posts) => {
-    const investors = {};
-    const investorProfiles = [
-      { name: "Sarah Johnson", company: "Green Ventures", expertise: "Climate Tech" },
-      { name: "Michael Chen", company: "Tech Angels", expertise: "Technology" },
-      { name: "Emily Rodriguez", company: "Social Impact Fund", expertise: "Social Enterprise" },
-      { name: "David Kim", company: "Sustainable Capital", expertise: "Agriculture" },
-      { name: "Lisa Thompson", company: "Women's Fund", expertise: "Women Entrepreneurs" },
-      { name: "James Wilson", company: "Local Investors", expertise: "Local Business" },
-      { name: "Maria Garcia", company: "Food Innovation", expertise: "Food & Retail" },
-      { name: "Robert Brown", company: "Education Partners", expertise: "Education" },
-      { name: "Jennifer Davis", company: "Health Ventures", expertise: "Healthcare" },
-      { name: "Christopher Lee", company: "Arts Foundation", expertise: "Arts & Culture" }
-    ];
-    
-    console.log('Generating investors for posts:', posts.length);
-    
-    posts.forEach(post => {
-      if (post.funded > 0) {
-        // Simulate 1-4 investors per funded post based on funding amount
-        const baseInvestors = Math.max(1, Math.floor(post.funded / 1000));
-        const numInvestors = Math.min(baseInvestors, 4);
-        const postInvestors = [];
-        
-        // Distribute funding among investors
-        let remainingFunding = post.funded;
-        
-        for (let i = 0; i < numInvestors; i++) {
-          const investorProfile = investorProfiles[Math.floor(Math.random() * investorProfiles.length)];
-          
-          // Calculate investment amount (last investor gets remaining amount)
-          let investmentAmount;
-          if (i === numInvestors - 1) {
-            investmentAmount = remainingFunding;
-          } else {
-            const maxAmount = Math.floor(remainingFunding * 0.6); // Max 60% for any single investor
-            investmentAmount = Math.floor(Math.random() * maxAmount) + Math.floor(post.funded * 0.1); // Min 10% of total
-            remainingFunding -= investmentAmount;
+  const fetchInvestorData = async (posts) => {
+    try {
+      const investors = {};
+      
+      // Fetch investments for each post
+      for (const post of posts) {
+        if (post.funded > 0) {
+          try {
+            const q = query(
+              collection(db, "investments"),
+              where("postId", "==", post.id),
+              orderBy("investedAt", "desc")
+            );
+            const snapshot = await getDocs(q);
+            
+            const postInvestors = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                investorName: data.investorName,
+                investorEmail: data.investorEmail,
+                amount: data.amount,
+                investedAt: data.investedAt ? new Date(data.investedAt.toDate()) : new Date(),
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.investorName)}&background=007bff&color=fff&size=100`
+              };
+            });
+            
+            investors[post.id] = postInvestors;
+          } catch (error) {
+            console.log(`Error fetching investors for post ${post.id}:`, error.message);
+            investors[post.id] = [];
           }
-          
-          // Generate investment date within a reasonable timeframe
-          const daysAfterPost = Math.floor(Math.random() * 30) + 1; // 1-30 days after post
-          const investmentDate = new Date(post.createdAt.getTime() + daysAfterPost * 24 * 60 * 60 * 1000);
-          
-          postInvestors.push({
-            name: investorProfile.name,
-            company: investorProfile.company,
-            expertise: investorProfile.expertise,
-            amount: investmentAmount,
-            date: investmentDate,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(investorProfile.name)}&background=007bff&color=fff&size=100`
-          });
+        } else {
+          investors[post.id] = [];
         }
-        
-        // Sort investors by investment amount (highest first)
-        postInvestors.sort((a, b) => b.amount - a.amount);
-        investors[post.id] = postInvestors;
-        
-        console.log(`Post ${post.id}: Generated ${postInvestors.length} investors`);
       }
-    });
-    
-    console.log('Total investor data generated:', Object.keys(investors).length);
-    return investors;
+      
+      setInvestorData(investors);
+      console.log('Investor data fetched:', Object.keys(investors).length, 'posts with investors');
+    } catch (error) {
+      console.error("Error fetching investor data:", error);
+      setInvestorData({});
+    }
   };
 
   const formatDate = (date) => {
@@ -321,7 +204,9 @@ const ApplicantProfileScreen = () => {
             <Text style={styles.debugTitle}>Debug Info</Text>
             <Text style={styles.debugText}>Posts: {myPosts.length}</Text>
             <Text style={styles.debugText}>Investor Data Keys: {Object.keys(investorData).length}</Text>
+            <Text style={styles.debugText}>Total Investors: {Object.values(investorData).reduce((total, investors) => total + investors.length, 0)}</Text>
             <Text style={styles.debugText}>User Role: {userRole}</Text>
+            <Text style={styles.debugText}>User ID: {user?.uid}</Text>
             <Text style={styles.debugText}>User Email: {user?.email}</Text>
           </View>
         )}
@@ -404,15 +289,14 @@ const ApplicantProfileScreen = () => {
                                 style={styles.investorAvatar}
                               />
                               <View style={styles.investorInfo}>
-                                <Text style={styles.investorName}>{investor.name}</Text>
-                                <Text style={styles.investorCompany}>{investor.company}</Text>
-                                <Text style={styles.investorExpertise}>{investor.expertise}</Text>
+                                <Text style={styles.investorName}>{investor.investorName}</Text>
+                                <Text style={styles.investorEmail}>{investor.investorEmail}</Text>
                                 <View style={styles.investorAmountRow}>
                                   <Text style={styles.investorAmount}>
                                     ${investor.amount.toLocaleString()}
                                   </Text>
                                   <Text style={styles.investorDate}>
-                                    {formatDate(investor.date)}
+                                    {formatDate(investor.investedAt)}
                                   </Text>
                                 </View>
                               </View>
@@ -423,7 +307,10 @@ const ApplicantProfileScreen = () => {
                     ) : (
                       <View style={styles.investorsSection}>
                         <Text style={styles.noInvestorsText}>
-                          No investors yet for this post
+                          {post.funded > 0 
+                            ? `This post has received $${post.funded.toLocaleString()} in funding`
+                            : "No funding received yet for this post"
+                          }
                         </Text>
                       </View>
                     )}
@@ -758,6 +645,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
+    marginBottom: 8,
     ...(isWeb && {
       transition: 'all 0.2s ease',
       ':hover': {
@@ -780,17 +668,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 2,
   },
-  investorCompany: {
+  investorEmail: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#007bff',
-    marginBottom: 1,
-  },
-  investorExpertise: {
-    fontSize: 11,
     color: '#666',
     marginBottom: 4,
-    fontStyle: 'italic',
   },
   investorAmountRow: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 // screens/FundingPostsScreen.js
-import { collection, doc, getDocs, increment, orderBy, query, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, increment, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,11 +17,13 @@ import {
   View,
 } from "react-native";
 import { db } from "../../config/firebase";
+import { useUserRole } from "../../contexts/UserRoleContext";
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 const FundingPostsScreen = () => {
+  const { user } = useUserRole();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -116,13 +118,30 @@ const FundingPostsScreen = () => {
 
   // Process the actual investment after confirmation
   const processInvestment = async () => {
-    if (!selectedPost || !investmentAmount || investmentAmount <= 0) {
+    if (!selectedPost || !investmentAmount || investmentAmount <= 0 || !user) {
       return;
     }
 
     setUpdating(true);
     setShowConfirmation(false);
     try {
+      // Create investment record
+      const investmentData = {
+        postId: selectedPost.id,
+        postTitle: selectedPost.applicantName,
+        investorId: user.uid,
+        investorName: user.displayName || 'Anonymous Investor',
+        investorEmail: user.email,
+        amount: parseFloat(investmentAmount),
+        investedAt: serverTimestamp(),
+        postApplicantName: selectedPost.applicantName,
+        postCategory: selectedPost.category,
+        postLocation: selectedPost.location
+      };
+
+      // Add investment record to investments collection
+      await addDoc(collection(db, "investments"), investmentData);
+
       // Update the funded amount in Firestore
       const postRef = doc(db, "fundingPosts", selectedPost.id);
       await updateDoc(postRef, {
