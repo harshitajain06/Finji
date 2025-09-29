@@ -29,6 +29,8 @@ const FundingPostsScreen = () => {
   const [updating, setUpdating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("urgency"); // urgency, amount, recent
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [investmentAmount, setInvestmentAmount] = useState(0);
 
   const categories = [
     "All", "Women", "Climate", "Agriculture", "Education", 
@@ -97,8 +99,8 @@ const FundingPostsScreen = () => {
     }
   };
 
-  // Handle support with database update
-  const handleSupport = async (amount) => {
+  // Handle support - show confirmation modal
+  const handleSupport = (amount) => {
     if (!selectedPost || !amount || amount <= 0) {
       if (isWeb) {
         alert("Please enter a valid amount to support.");
@@ -108,12 +110,23 @@ const FundingPostsScreen = () => {
       return;
     }
 
+    setInvestmentAmount(amount);
+    setShowConfirmation(true);
+  };
+
+  // Process the actual investment after confirmation
+  const processInvestment = async () => {
+    if (!selectedPost || !investmentAmount || investmentAmount <= 0) {
+      return;
+    }
+
     setUpdating(true);
+    setShowConfirmation(false);
     try {
       // Update the funded amount in Firestore
       const postRef = doc(db, "fundingPosts", selectedPost.id);
       await updateDoc(postRef, {
-        funded: increment(parseFloat(amount))
+        funded: increment(parseFloat(investmentAmount))
       });
 
       // Update local state
@@ -121,7 +134,7 @@ const FundingPostsScreen = () => {
         if (post.id === selectedPost.id) {
           return {
             ...post,
-            funded: post.funded + parseFloat(amount)
+            funded: post.funded + parseFloat(investmentAmount)
           };
         }
         return post;
@@ -131,13 +144,13 @@ const FundingPostsScreen = () => {
       // Update selected post for modal display
       setSelectedPost(prev => ({
         ...prev,
-        funded: prev.funded + parseFloat(amount)
+        funded: prev.funded + parseFloat(investmentAmount)
       }));
 
       if (isWeb) {
-        alert(`Thank you for supporting with $${amount}!`);
+        alert(`Thank you for supporting with $${investmentAmount}!`);
       } else {
-        Alert.alert("Success!", `Thank you for supporting with $${amount}!`);
+        Alert.alert("Success!", `Thank you for supporting with $${investmentAmount}!`);
       }
       setSupportAmount("");
     } catch (error) {
@@ -417,6 +430,88 @@ const FundingPostsScreen = () => {
           </View>
         </Modal>
       )}
+
+      {/* Confirmation Checkout Modal */}
+      {showConfirmation && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showConfirmation}
+          onRequestClose={() => setShowConfirmation(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.confirmationModal, isWeb && styles.confirmationModalWeb]}>
+              <View style={styles.confirmationHeader}>
+                <Text style={styles.confirmationTitle}>Confirm Investment</Text>
+                <TouchableOpacity
+                  onPress={() => setShowConfirmation(false)}
+                  style={styles.closeConfirmationButton}
+                >
+                  <Text style={styles.closeConfirmationText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.confirmationContent}>
+                <View style={styles.investmentSummary}>
+                  <Text style={styles.summaryLabel}>Investment Summary</Text>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryText}>Project:</Text>
+                    <Text style={styles.summaryValue}>{selectedPost?.applicantName}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryText}>Category:</Text>
+                    <Text style={styles.summaryValue}>{selectedPost?.category}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryText}>Location:</Text>
+                    <Text style={styles.summaryValue}>{selectedPost?.location}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryText}>Current Funding:</Text>
+                    <Text style={styles.summaryValue}>
+                      ${selectedPost?.funded || 0} / ${selectedPost?.goalAmount}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryDivider} />
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.investmentAmountLabel}>Your Investment:</Text>
+                    <Text style={styles.investmentAmountValue}>${investmentAmount}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.paymentInfo}>
+                  <Text style={styles.paymentTitle}>Payment Information</Text>
+                  <Text style={styles.paymentNote}>
+                    This is a demo. In a real application, you would be redirected to a secure payment processor.
+                  </Text>
+                </View>
+
+                <View style={styles.confirmationButtons}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowConfirmation(false)}
+                    disabled={updating}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.confirmButton, updating && styles.disabledButton]}
+                    onPress={processInvestment}
+                    disabled={updating}
+                  >
+                    {updating ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={styles.confirmButtonText}>Confirm Investment</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -457,12 +552,15 @@ const styles = StyleSheet.create({
     padding: isWeb ? 20 : 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    alignItems: 'center',
     ...(isWeb && {
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
     }),
   },
   categoryFilters: {
     marginBottom: 15,
+    width: '100%',
+    alignItems: 'center',
   },
   categoryFilter: {
     backgroundColor: '#f5f5f5',
@@ -497,6 +595,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    width: '100%',
   },
   sortLabel: {
     fontSize: isWeb ? 14 : 13,
@@ -748,6 +847,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
+    alignItems: "center",
     padding: isWeb ? 20 : 10,
   },
   modalContent: {
@@ -755,6 +855,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 15,
     maxHeight: "90%",
+    width: '100%',
+    maxWidth: isWeb ? 600 : '95%',
   },
   modalContentWeb: {
     maxWidth: 600,
@@ -856,5 +958,148 @@ const styles = StyleSheet.create({
         backgroundColor: '#666',
       }
     }),
+  },
+
+  // Confirmation Modal Styles
+  confirmationModal: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 0,
+    maxHeight: "90%",
+    width: "100%",
+    maxWidth: isWeb ? 500 : '95%',
+  },
+  confirmationModalWeb: {
+    maxWidth: 500,
+    width: '100%',
+    margin: '0 auto',
+    maxHeight: '80vh',
+  },
+  confirmationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  confirmationTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeConfirmationButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeConfirmationText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  confirmationContent: {
+    padding: 20,
+  },
+  investmentSummary: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  summaryLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 12,
+  },
+  investmentAmountLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  investmentAmountValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007bff',
+  },
+  paymentInfo: {
+    backgroundColor: '#fff3cd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+  },
+  paymentTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#856404',
+    marginBottom: 4,
+  },
+  paymentNote: {
+    fontSize: 12,
+    color: '#856404',
+    lineHeight: 16,
+  },
+  confirmationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6c757d',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    ...(isWeb && {
+      cursor: 'pointer',
+      ':hover': {
+        backgroundColor: '#0056b3',
+      }
+    }),
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

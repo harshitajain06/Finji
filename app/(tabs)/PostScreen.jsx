@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Alert,
     Dimensions,
@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import { db, storage } from "../../config/firebase";
+import { useUserRole } from "../../contexts/UserRoleContext";
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -29,6 +30,7 @@ const showMessage = (msg, type = "success") => {
 };
 
 const CreateFundingPostScreen = () => {
+  const { user, userRole } = useUserRole();
   const [applicantName, setApplicantName] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
@@ -40,6 +42,58 @@ const CreateFundingPostScreen = () => {
   const [loanPurpose, setLoanPurpose] = useState("");
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [existingPost, setExistingPost] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Check for existing post and load data
+  useEffect(() => {
+    const checkExistingPost = async () => {
+      if (!user || userRole !== 'applicant') {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const postsRef = collection(db, "fundingPosts");
+        const q = query(
+          postsRef,
+          where("userId", "==", user.uid),
+          orderBy("createdAt", "desc"),
+          limit(1)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const postData = querySnapshot.docs[0].data();
+          const postId = querySnapshot.docs[0].id;
+          
+          setExistingPost({ id: postId, ...postData });
+          setIsEditMode(true);
+          
+          // Load existing data into form
+          setApplicantName(postData.applicantName || "");
+          setLocation(postData.location || "");
+          setCategory(postData.category || "");
+          setGoalAmount(postData.goalAmount?.toString() || "");
+          setDaysRemaining(postData.daysRemaining?.toString() || "");
+          setDescription(postData.description || "");
+          setTeamMembers(postData.teamMembers?.join(", ") || "");
+          setUseOfFunds(postData.useOfFunds || "");
+          setLoanPurpose(postData.loanPurpose || "");
+          setImage(postData.imageUrl || null);
+        }
+      } catch (error) {
+        console.error("Error checking existing post:", error);
+        showMessage("Failed to load existing data.", "Error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkExistingPost();
+  }, [user, userRole]);
 
   // ✅ Pick Image (with Web fallback)
   const handleImagePick = async () => {
@@ -82,10 +136,10 @@ const CreateFundingPostScreen = () => {
 
   try {
     setUploading(true);
-    let imageUrl = "";
+    let imageUrl = existingPost?.imageUrl || "";
 
-    if (image) {
-      // 👇 Works on both web + mobile
+    if (image && image !== existingPost?.imageUrl) {
+      // Only upload new image if it's different from existing one
       const response = await fetch(image);
       const blob = await response.blob();
       const fileRef = ref(storage, `fundingPosts/${Date.now()}.jpg`);
@@ -105,36 +159,68 @@ const CreateFundingPostScreen = () => {
         : [],
       useOfFunds,
       loanPurpose,
-      imageUrl, // ✅ always a valid Firebase URL or ""
-      createdAt: serverTimestamp(),
+      imageUrl,
+      userId: user.uid, // Add user ID for tracking
+      updatedAt: serverTimestamp(),
     };
 
-    await addDoc(collection(db, "fundingPosts"), postData);
-    showMessage("Your funding request has been posted!", "Success");
+    if (isEditMode && existingPost) {
+      // Update existing post
+      const postRef = doc(db, "fundingPosts", existingPost.id);
+      await updateDoc(postRef, postData);
+      showMessage("Your funding request has been updated!", "Success");
+    } else {
+      // Create new post
+      await addDoc(collection(db, "fundingPosts"), {
+        ...postData,
+        createdAt: serverTimestamp(),
+      });
+      showMessage("Your funding request has been posted!", "Success");
+    }
 
-    // Reset form
-    setApplicantName("");
-    setLocation("");
-    setCategory("");
-    setGoalAmount("");
-    setDaysRemaining("");
-    setDescription("");
-    setTeamMembers("");
-    setUseOfFunds("");
-    setLoanPurpose("");
-    setImage(null);
+    // Don't reset form in edit mode, keep the data
+    if (!isEditMode) {
+      setApplicantName("");
+      setLocation("");
+      setCategory("");
+      setGoalAmount("");
+      setDaysRemaining("");
+      setDescription("");
+      setTeamMembers("");
+      setUseOfFunds("");
+      setLoanPurpose("");
+      setImage(null);
+    }
   } catch (error) {
     console.error("Error posting data:", error);
-    showMessage("Failed to create the post.", "Error");
+    showMessage("Failed to save the post.", "Error");
   } finally {
     setUploading(false);
   }
 };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={styles.header}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.header}>💰 Funding Request</Text>
+        <Text style={styles.header}>
+          {isEditMode ? "✏️ Edit Funding Request" : "💰 Create Funding Request"}
+        </Text>
+        
+        {isEditMode && (
+          <View style={styles.editModeBanner}>
+            <Text style={styles.editModeText}>
+              📝 You already have a funding request. You can edit it here.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.formGrid}>
           <View style={styles.formSection}>
@@ -231,7 +317,10 @@ const CreateFundingPostScreen = () => {
           disabled={uploading}
         >
           <Text style={styles.buttonText}>
-            {uploading ? "Submitting..." : "🚀 Submit Request"}
+            {uploading 
+              ? (isEditMode ? "Updating..." : "Submitting...") 
+              : (isEditMode ? "💾 Update Request" : "🚀 Submit Request")
+            }
           </Text>
         </TouchableOpacity>
       </View>
@@ -384,5 +473,19 @@ const styles = StyleSheet.create({
         transform: 'scale(1.02)',
       }
     }),
+  },
+  editModeBanner: {
+    backgroundColor: "#e3f2fd",
+    padding: isWeb ? 16 : 12,
+    borderRadius: 8,
+    marginBottom: isWeb ? 20 : 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2196f3",
+  },
+  editModeText: {
+    color: "#1976d2",
+    fontSize: isWeb ? 14 : 13,
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

@@ -11,10 +11,12 @@ import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
 import { useUserRole } from "../../contexts/UserRoleContext";
 import { useColorScheme } from "../../hooks/useColorScheme";
+import ApplicantProfileScreen from "./ApplicantProfileScreen";
 import FundScreen from "./FundScreen";
 import HomeScreen from "./HomeScreen";
-import PostScreen from "./PostScreen";
 import LoginRegister from './index';
+import PostScreen from "./PostScreen";
+import ProfileScreen from "./ProfileScreen";
 
 const isWeb = Platform.OS === 'web';
 
@@ -149,6 +151,32 @@ const DrawerNavigator = () => {
           title: `Home (${userRole === 'investor' ? 'Investor' : 'Applicant'})` 
         }} 
       />
+      
+      {userRole === 'investor' && (
+        <Drawer.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'My Investments',
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="person-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      )}
+      
+      {userRole === 'applicant' && (
+        <Drawer.Screen
+          name="ApplicantProfile"
+          component={ApplicantProfileScreen}
+          options={{
+            title: 'My Profile & Investors',
+            drawerIcon: ({ color, size }) => (
+              <Ionicons name="people-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      )}
       
       <Drawer.Screen
         name="Logout"
