@@ -198,18 +198,6 @@ const ApplicantProfileScreen = () => {
           </View>
         </View>
 
-        {/* Debug Section - Remove in production */}
-        {__DEV__ && (
-          <View style={styles.debugSection}>
-            <Text style={styles.debugTitle}>Debug Info</Text>
-            <Text style={styles.debugText}>Posts: {myPosts.length}</Text>
-            <Text style={styles.debugText}>Investor Data Keys: {Object.keys(investorData).length}</Text>
-            <Text style={styles.debugText}>Total Investors: {Object.values(investorData).reduce((total, investors) => total + investors.length, 0)}</Text>
-            <Text style={styles.debugText}>User Role: {userRole}</Text>
-            <Text style={styles.debugText}>User ID: {user?.uid}</Text>
-            <Text style={styles.debugText}>User Email: {user?.email}</Text>
-          </View>
-        )}
 
         {/* My Posts Section */}
         <View style={styles.postsSection}>
@@ -693,25 +681,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     padding: 16,
-  },
-  debugSection: {
-    backgroundColor: '#f8f9fa',
-    padding: 16,
-    margin: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-  },
-  debugTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#495057',
-    marginBottom: 8,
-  },
-  debugText: {
-    fontSize: 12,
-    color: '#6c757d',
-    marginBottom: 4,
   },
 });
 

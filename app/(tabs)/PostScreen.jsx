@@ -3,16 +3,16 @@ import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestam
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Dimensions,
-    Image,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { db, storage } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -171,25 +171,16 @@ const CreateFundingPostScreen = () => {
       showMessage("Your funding request has been updated!", "Success");
     } else {
       // Create new post
-      await addDoc(collection(db, "fundingPosts"), {
+      const docRef = await addDoc(collection(db, "fundingPosts"), {
         ...postData,
         createdAt: serverTimestamp(),
       });
+      
+      // Set the newly created post as existing post and switch to edit mode
+      setExistingPost({ id: docRef.id, ...postData });
+      setIsEditMode(true);
+      
       showMessage("Your funding request has been posted!", "Success");
-    }
-
-    // Don't reset form in edit mode, keep the data
-    if (!isEditMode) {
-      setApplicantName("");
-      setLocation("");
-      setCategory("");
-      setGoalAmount("");
-      setDaysRemaining("");
-      setDescription("");
-      setTeamMembers("");
-      setUseOfFunds("");
-      setLoanPurpose("");
-      setImage(null);
     }
   } catch (error) {
     console.error("Error posting data:", error);
@@ -197,7 +188,28 @@ const CreateFundingPostScreen = () => {
   } finally {
     setUploading(false);
   }
-};
+  };
+
+  // Handle creating a new post when in edit mode
+  const handleCreateNew = () => {
+    // Clear the existing post and switch to create mode
+    setExistingPost(null);
+    setIsEditMode(false);
+    
+    // Clear all form data
+    setApplicantName("");
+    setLocation("");
+    setCategory("");
+    setGoalAmount("");
+    setDaysRemaining("");
+    setDescription("");
+    setTeamMembers("");
+    setUseOfFunds("");
+    setLoanPurpose("");
+    setImage(null);
+    
+    showMessage("Ready to create a new funding request!", "Info");
+  };
 
   if (loading) {
     return (
@@ -323,6 +335,18 @@ const CreateFundingPostScreen = () => {
             }
           </Text>
         </TouchableOpacity>
+
+        {isEditMode && (
+          <TouchableOpacity
+            style={[styles.secondaryButton, uploading && { backgroundColor: "#ccc" }]}
+            onPress={handleCreateNew}
+            disabled={uploading}
+          >
+            <Text style={styles.secondaryButtonText}>
+              🆕 Create New Post
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -439,6 +463,26 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "700",
     fontSize: isWeb ? 18 : 16,
+  },
+  secondaryButton: {
+    backgroundColor: "#6c757d",
+    padding: isWeb ? 20 : 16,
+    borderRadius: isWeb ? 12 : 8,
+    marginTop: 12,
+    ...(isWeb && {
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      ":hover": {
+        backgroundColor: "#5a6268",
+        transform: "translateY(-2px)",
+      },
+    }),
+  },
+  secondaryButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: isWeb ? 16 : 14,
+    textAlign: "center",
   },
   imageButton: {
     marginTop: 10,
