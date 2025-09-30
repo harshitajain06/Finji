@@ -2,11 +2,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { useNavigation } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from "@react-navigation/stack";
 import { signOut } from 'firebase/auth';
 import React from "react";
 import { Alert, Platform } from 'react-native';
+import NotFoundScreen from "../+not-found";
 import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -203,19 +204,22 @@ export default function StackLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        contentStyle: {
-          backgroundColor: Colors[colorScheme ?? "light"].background,
-          ...(isWeb && {
-            minHeight: '100vh',
-          }),
-        },
-      }}
-    >
-    <Stack.Screen name="LoginRegister" component={LoginRegister} />
-      <Stack.Screen name="Drawer" component={DrawerNavigator} />
-    </Stack.Navigator>
+    <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: Colors[colorScheme ?? "light"].background,
+            ...(isWeb && {
+              minHeight: '100vh',
+            }),
+          },
+        }}
+      >
+      <Stack.Screen name="LoginRegister" component={LoginRegister} />
+        <Stack.Screen name="Drawer" component={DrawerNavigator} />
+        <Stack.Screen name="NotFound" component={NotFoundScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
