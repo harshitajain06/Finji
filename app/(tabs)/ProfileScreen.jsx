@@ -5,6 +5,7 @@ import {
     Dimensions,
     Image,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -22,6 +23,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [totalInvested, setTotalInvested] = useState(0);
   const [totalProjects, setTotalProjects] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (userRole === 'investor') {
@@ -32,6 +34,7 @@ const ProfileScreen = () => {
   const fetchInvestorInvestments = async () => {
     try {
       setLoading(true);
+      setRefreshing(true);
       
       // In a real app, you would have an investments collection
       // For now, we'll simulate with funding posts that have been funded
@@ -68,6 +71,13 @@ const ProfileScreen = () => {
       console.error("Error fetching investments:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (userRole === 'investor') {
+      fetchInvestorInvestments();
     }
   };
 
@@ -120,6 +130,15 @@ const ProfileScreen = () => {
             </Text>
             <Text style={styles.profileRole}>Investor Profile</Text>
           </View>
+          <Pressable 
+            style={styles.reloadButton}
+            onPress={handleRefresh}
+            disabled={refreshing}
+          >
+            <Text style={styles.reloadIcon}>
+              {refreshing ? '⟳' : '↻'}
+            </Text>
+          </Pressable>
         </View>
       </View>
 
@@ -306,6 +325,28 @@ const styles = StyleSheet.create({
   profileRole: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
+  },
+  reloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 15,
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        transform: 'scale(1.05)',
+      }
+    }),
+  },
+  reloadIcon: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   // Stats Section
