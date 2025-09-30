@@ -2,19 +2,19 @@
 import { addDoc, collection, doc, getDocs, increment, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Image,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -33,6 +33,7 @@ const FundingPostsScreen = () => {
   const [sortBy, setSortBy] = useState("urgency"); // urgency, amount, recent
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [investmentAmount, setInvestmentAmount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   const categories = [
     "All", "Women", "Climate", "Agriculture", "Education", 
@@ -41,6 +42,7 @@ const FundingPostsScreen = () => {
 
   const fetchPosts = async () => {
     try {
+      setRefreshing(true);
       const q = query(collection(db, "fundingPosts"), orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
       const postList = snapshot.docs.map((doc) => {
@@ -57,12 +59,17 @@ const FundingPostsScreen = () => {
       console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  const handleRefresh = () => {
+    fetchPosts();
+  };
 
   // Calculate remaining days
   const calculateRemainingDays = (deadline) => {
@@ -198,8 +205,21 @@ const FundingPostsScreen = () => {
     <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>Browse Loans</Text>
-        <Text style={styles.headerSubtitle}>Choose a person to support and make a difference</Text>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Browse Loans</Text>
+            <Text style={styles.headerSubtitle}>Choose a person to support and make a difference</Text>
+          </View>
+          <Pressable 
+            style={styles.reloadButton}
+            onPress={handleRefresh}
+            disabled={refreshing}
+          >
+            <Text style={styles.reloadIcon}>
+              {refreshing ? '⟳' : '↻'}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Filters and Sort Section */}
@@ -552,6 +572,17 @@ const styles = StyleSheet.create({
       boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
     }),
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: isWeb ? 1200 : '100%',
+  },
+  headerTextContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: isWeb ? 32 : 24,
     fontWeight: 'bold',
@@ -563,6 +594,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     opacity: 0.9,
     textAlign: 'center',
+  },
+  reloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        transform: 'scale(1.05)',
+      }
+    }),
+  },
+  reloadIcon: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   // Filters Section

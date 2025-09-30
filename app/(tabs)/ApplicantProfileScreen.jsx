@@ -1,14 +1,15 @@
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -23,6 +24,7 @@ const ApplicantProfileScreen = () => {
   const [totalFunding, setTotalFunding] = useState(0);
   const [totalPosts, setTotalPosts] = useState(0);
   const [investorData, setInvestorData] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (userRole === 'applicant') {
@@ -33,6 +35,7 @@ const ApplicantProfileScreen = () => {
   const fetchApplicantData = async () => {
     try {
       setLoading(true);
+      setRefreshing(true);
       
       // Fetch posts created by this applicant using userId
       let userPosts = [];
@@ -80,6 +83,13 @@ const ApplicantProfileScreen = () => {
       console.error("Error fetching applicant data:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (userRole === 'applicant') {
+      fetchApplicantData();
     }
   };
 
@@ -177,6 +187,15 @@ const ApplicantProfileScreen = () => {
               </Text>
               <Text style={styles.profileRole}>Applicant Profile</Text>
             </View>
+            <Pressable 
+              style={styles.reloadButton}
+              onPress={handleRefresh}
+              disabled={refreshing}
+            >
+              <Text style={styles.reloadIcon}>
+                {refreshing ? '⟳' : '↻'}
+              </Text>
+            </Pressable>
           </View>
         </View>
 
@@ -395,6 +414,28 @@ const styles = StyleSheet.create({
   profileRole: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
+  },
+  reloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 15,
+    ...(isWeb && {
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      ':hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        transform: 'scale(1.05)',
+      }
+    }),
+  },
+  reloadIcon: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   // Stats Section
