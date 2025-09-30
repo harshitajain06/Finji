@@ -311,14 +311,7 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* CTA Section */}
-      <View style={styles.ctaSection}>
-        <Text style={styles.ctaTitle}>Make a loan today</Text>
-        <Text style={styles.ctaSubtitle}>Choose a person to support</Text>
-        <TouchableOpacity style={styles.ctaButton}>
-          <Text style={styles.ctaButtonText}>Start Lending Now</Text>
-        </TouchableOpacity>
-      </View>
+    
     </ScrollView>
   );
 }

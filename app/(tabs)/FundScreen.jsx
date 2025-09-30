@@ -2,19 +2,19 @@
 import { addDoc, collection, doc, getDocs, increment, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    Image,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
@@ -119,6 +119,17 @@ const FundingPostsScreen = () => {
       return;
     }
 
+    // Check if the amount exceeds the remaining funding needed
+    const remainingAmount = selectedPost.goalAmount - selectedPost.funded;
+    if (amount > remainingAmount) {
+      if (isWeb) {
+        alert(`You can only support up to $${remainingAmount.toLocaleString()}. The remaining amount needed is $${remainingAmount.toLocaleString()}.`);
+      } else {
+        Alert.alert("Amount Too High", `You can only support up to $${remainingAmount.toLocaleString()}. The remaining amount needed is $${remainingAmount.toLocaleString()}.`);
+      }
+      return;
+    }
+
     setInvestmentAmount(amount);
     setShowConfirmation(true);
   };
@@ -126,6 +137,18 @@ const FundingPostsScreen = () => {
   // Process the actual investment after confirmation
   const processInvestment = async () => {
     if (!selectedPost || !investmentAmount || investmentAmount <= 0 || !user) {
+      return;
+    }
+
+    // Double-check if the amount exceeds the remaining funding needed
+    const remainingAmount = selectedPost.goalAmount - selectedPost.funded;
+    if (investmentAmount > remainingAmount) {
+      if (isWeb) {
+        alert(`You can only support up to $${remainingAmount.toLocaleString()}. The remaining amount needed is $${remainingAmount.toLocaleString()}.`);
+      } else {
+        Alert.alert("Amount Too High", `You can only support up to $${remainingAmount.toLocaleString()}. The remaining amount needed is $${remainingAmount.toLocaleString()}.`);
+      }
+      setShowConfirmation(false);
       return;
     }
 
@@ -290,11 +313,12 @@ const FundingPostsScreen = () => {
         ) : (
           <View style={styles.postsGrid}>
             {filteredPosts.map((post) => {
-              const fundedPercent = (post.funded / post.goalAmount) * 100;
-              const remaining = post.goalAmount - post.funded;
+              const fundedPercent = Math.min((post.funded / post.goalAmount) * 100, 100);
+              const remaining = Math.max(post.goalAmount - post.funded, 0);
               const remainingDays = calculateRemainingDays(post.deadline);
               const isUrgent = remainingDays !== null && remainingDays <= 7;
               const isAlmostFunded = fundedPercent >= 80;
+              const isFullyFunded = post.funded >= post.goalAmount;
 
               return (
                 <View key={post.id} style={[
@@ -345,7 +369,7 @@ const FundingPostsScreen = () => {
                     
                     <View style={styles.progressInfo}>
                       <Text style={styles.remainingText}>
-                        ${remaining.toLocaleString()} to go
+                        {isFullyFunded ? 'Fully Funded!' : `$${remaining.toLocaleString()} to go`}
                       </Text>
                       <Text style={styles.fundedPercent}>
                         {Math.round(fundedPercent)}% funded
@@ -415,8 +439,11 @@ const FundingPostsScreen = () => {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {calculateRemainingDays(selectedPost.deadline) || 'No deadline'} days remaining • $
-                  {selectedPost.goalAmount - selectedPost.funded} to go
+                  {calculateRemainingDays(selectedPost.deadline) || 'No deadline'} days remaining • {
+                    selectedPost.funded >= selectedPost.goalAmount 
+                      ? 'Fully Funded!' 
+                      : `$${Math.max(selectedPost.goalAmount - selectedPost.funded, 0).toLocaleString()} to go`
+                  }
                 </Text>
 
                 {/* Info */}
@@ -427,36 +454,53 @@ const FundingPostsScreen = () => {
                 <Text style={styles.paragraph}>{selectedPost.description}</Text>
 
                 {/* Support Options */}
-                <Text style={styles.sectionTitle}>Support this request</Text>
-                <View style={styles.amountRow}>
-                  {[25, 50, 100].map((amt) => (
+                {selectedPost.funded >= selectedPost.goalAmount ? (
+                  <View style={styles.fullyFundedContainer}>
+                    <Text style={styles.fullyFundedTitle}>🎉 Fully Funded!</Text>
+                    <Text style={styles.fullyFundedText}>
+                      This project has reached its funding goal. Thank you to all supporters!
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.sectionTitle}>Support this request</Text>
+                    <View style={styles.amountRow}>
+                      {[25, 50, 100].map((amt) => {
+                        const remainingAmount = selectedPost.goalAmount - selectedPost.funded;
+                        const isDisabled = amt > remainingAmount || updating;
+                        return (
+                          <TouchableOpacity
+                            key={amt}
+                            style={[styles.amountButton, isDisabled && styles.disabledButton]}
+                            onPress={() => handleSupport(amt)}
+                            disabled={isDisabled}
+                          >
+                            <Text style={[styles.amountText, isDisabled && styles.disabledText]}>
+                              ${amt}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Other amount"
+                      value={supportAmount}
+                      onChangeText={setSupportAmount}
+                      keyboardType="numeric"
+                      editable={!updating}
+                    />
                     <TouchableOpacity
-                      key={amt}
-                      style={styles.amountButton}
-                      onPress={() => handleSupport(amt)}
+                      style={[styles.supportButton, updating && styles.disabledButton]}
+                      onPress={() => handleSupport(supportAmount || 0)}
                       disabled={updating}
                     >
-                      <Text style={styles.amountText}>${amt}</Text>
+                      <Text style={styles.supportText}>
+                        {updating ? "Processing..." : `Support ${selectedPost.applicantName}`}
+                      </Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Other amount"
-                  value={supportAmount}
-                  onChangeText={setSupportAmount}
-                  keyboardType="numeric"
-                  editable={!updating}
-                />
-                <TouchableOpacity
-                  style={[styles.supportButton, updating && styles.disabledButton]}
-                  onPress={() => handleSupport(supportAmount || 0)}
-                  disabled={updating}
-                >
-                  <Text style={styles.supportText}>
-                    {updating ? "Processing..." : `Support ${selectedPost.applicantName}`}
-                  </Text>
-                </TouchableOpacity>
+                  </>
+                )}
 
                 <Pressable
                   style={styles.closeButton}
@@ -1011,10 +1055,34 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: "#ccc",
   },
+  disabledText: {
+    color: "#999",
+  },
   supportText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  fullyFundedContainer: {
+    backgroundColor: "#d4edda",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    marginVertical: 15,
+    borderWidth: 1,
+    borderColor: "#c3e6cb",
+  },
+  fullyFundedTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#155724",
+    marginBottom: 8,
+  },
+  fullyFundedText: {
+    fontSize: 14,
+    color: "#155724",
+    textAlign: "center",
+    lineHeight: 20,
   },
   closeButton: {
     marginTop: 15,
