@@ -2,20 +2,21 @@
 import { addDoc, collection, doc, getDocs, increment, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Image,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import InfoIcon from "../../components/InfoIcon";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
@@ -230,7 +231,14 @@ const FundingPostsScreen = () => {
       <View style={styles.headerSection}>
         <View style={styles.headerContent}>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Browse Loans</Text>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Browse Loans</Text>
+              <InfoIcon 
+                tooltip="Browse available loan opportunities from entrepreneurs around the world. Each loan shows the amount needed, progress, and deadline. You can invest as little as $25 to help someone achieve their business goals."
+                position="right"
+                style={styles.headerInfoIcon}
+              />
+            </View>
             <Text style={styles.headerSubtitle}>Choose a person to support and make a difference</Text>
           </View>
           <Pressable 
@@ -632,6 +640,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerInfoIcon: {
+    marginLeft: 10,
   },
   headerSubtitle: {
     fontSize: isWeb ? 16 : 14,

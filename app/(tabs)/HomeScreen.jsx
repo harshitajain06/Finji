@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import InfoIcon from "../../components/InfoIcon";
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -118,7 +119,14 @@ export default function HomePage() {
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
       {/* Hero Section */}
       <View style={styles.heroSection}>
-        <Text style={styles.heroTitle}>Finji</Text>
+        <View style={styles.heroTitleContainer}>
+          <Text style={styles.heroTitle}>Finji</Text>
+          <InfoIcon 
+            tooltip="Finji is a micro-lending platform that connects investors with entrepreneurs who need small loans to grow their businesses. Start with as little as $25 to make a real impact."
+            position="right"
+            style={styles.heroInfoIcon}
+          />
+        </View>
         <Text style={styles.heroSubtitle}>
           Lend as little as $25 to create a more equitable world.
         </Text>
@@ -129,7 +137,14 @@ export default function HomePage() {
 
       {/* Featured Categories */}
       <View style={styles.categoriesSection}>
-        <Text style={styles.sectionTitle}>Featured Categories</Text>
+        <View style={styles.sectionTitleContainer}>
+          <Text style={styles.sectionTitle}>Featured Categories</Text>
+          <InfoIcon 
+            tooltip="Browse loan categories to find causes you care about. Each category shows the number of people helped through micro-loans in that area."
+            position="right"
+            style={styles.sectionInfoIcon}
+          />
+        </View>
         <View style={styles.categoriesGrid}>
           {featuredCategories.map((category, index) => (
             <TouchableOpacity key={index} style={styles.categoryCard}>
@@ -143,7 +158,14 @@ export default function HomePage() {
 
       {/* Almost Funded Section */}
       <View style={styles.almostFundedSection}>
-        <Text style={styles.sectionTitle}>Almost there! Fund the last few dollars they need</Text>
+        <View style={styles.sectionTitleContainer}>
+          <Text style={styles.sectionTitle}>Almost there! Fund the last few dollars they need</Text>
+          <InfoIcon 
+            tooltip="These loans are almost fully funded! Your contribution can help complete their funding goal and get them started on their business journey."
+            position="right"
+            style={styles.sectionInfoIcon}
+          />
+        </View>
         <View style={styles.loansGrid}>
           {almostFundedLoans.map((loan) => (
             <View key={loan.id} style={styles.loanCard}>
@@ -842,5 +864,25 @@ const styles = StyleSheet.create({
     marginVertical: isWeb ? 25 : 15, 
     textAlign: "center",
     color: '#2c3e50',
+  },
+
+  // Info Icon Styles
+  heroTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  heroInfoIcon: {
+    marginLeft: 10,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  sectionInfoIcon: {
+    marginLeft: 10,
   },
 });

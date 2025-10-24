@@ -3,17 +3,18 @@ import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestam
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Dimensions,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import InfoIcon from "../../components/InfoIcon";
 import { db, storage } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
@@ -222,9 +223,16 @@ const CreateFundingPostScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.header}>
-          {isEditMode ? "✏️ Edit Funding Request" : "💰 Create Funding Request"}
-        </Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>
+            {isEditMode ? "✏️ Edit Funding Request" : "💰 Create Funding Request"}
+          </Text>
+          <InfoIcon 
+            tooltip="Create a funding request to get investors interested in your business idea. Provide clear details about your business, funding needs, and how you plan to use the money. Be specific about your goals and timeline."
+            position="right"
+            style={styles.headerInfoIcon}
+          />
+        </View>
         
         {isEditMode && (
           <View style={styles.editModeBanner}>
@@ -388,6 +396,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: isWeb ? 30 : 20,
     color: "#2c3e50",
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: isWeb ? 30 : 20,
+  },
+  headerInfoIcon: {
+    marginLeft: 10,
   },
   formGrid: {
     flexDirection: isWeb ? 'row' : 'column',
