@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -36,39 +36,72 @@ const ProfileScreen = () => {
       setLoading(true);
       setRefreshing(true);
       
-      // In a real app, you would have an investments collection
-      // For now, we'll simulate with funding posts that have been funded
+      if (!user?.uid) {
+        setInvestments([]);
+        setTotalInvested(0);
+        setTotalProjects(0);
+        return;
+      }
+      
+      // Fetch investments from the current investor
       const q = query(
-        collection(db, "fundingPosts"), 
-        orderBy("createdAt", "desc")
+        collection(db, "investments"),
+        where("investorId", "==", user.uid),
+        orderBy("investedAt", "desc")
       );
-      const snapshot = await getDocs(q);
+      const investmentsSnapshot = await getDocs(q);
       
-      // Filter posts that have been funded (simulating investor's investments)
-      const fundedPosts = snapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            funded: data.funded || 0,
-            deadline: data.deadline ? new Date(data.deadline.toDate()) : null,
-            // Simulate investment amount (in real app, this would come from investments collection)
-            investmentAmount: Math.floor(data.funded * 0.3), // Simulate 30% of funding as this investor's contribution
-            investmentDate: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-          };
-        })
-        .filter(post => post.funded > 0);
+      // Fetch post details for each investment
+      const investmentsWithPosts = [];
+      for (const investmentDoc of investmentsSnapshot.docs) {
+        const investmentData = investmentDoc.data();
+        
+        try {
+          // Fetch the corresponding post
+          const postRef = doc(db, "fundingPosts", investmentData.postId);
+          const postSnap = await getDoc(postRef);
+          
+          if (postSnap.exists()) {
+            const postData = postSnap.data();
+            investmentsWithPosts.push({
+              id: investmentDoc.id,
+              investmentId: investmentDoc.id,
+              postId: investmentData.postId,
+              applicantName: postData.applicantName,
+              category: postData.category,
+              location: postData.location,
+              description: postData.description,
+              goalAmount: postData.goalAmount,
+              funded: postData.funded || 0,
+              deadline: postData.deadline ? new Date(postData.deadline.toDate()) : null,
+              imageUrl: postData.imageUrl,
+              investmentAmount: investmentData.amount,
+              investmentDate: investmentData.investedAt ? new Date(investmentData.investedAt.toDate()) : new Date(),
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching post ${investmentData.postId}:`, error);
+        }
+      }
 
-      setInvestments(fundedPosts);
+      setInvestments(investmentsWithPosts);
       
-      // Calculate totals based on simulated investment amounts
-      const total = fundedPosts.reduce((sum, post) => sum + post.investmentAmount, 0);
+      // Calculate totals based on actual investment amounts
+      const total = investmentsWithPosts.reduce((sum, inv) => sum + inv.investmentAmount, 0);
       setTotalInvested(total);
-      setTotalProjects(fundedPosts.length);
+      setTotalProjects(investmentsWithPosts.length);
+      
+      console.log('Investor investments fetched:', {
+        totalInvestments: investmentsWithPosts.length,
+        totalInvested: total,
+        investorId: user.uid
+      });
       
     } catch (error) {
       console.error("Error fetching investments:", error);
+      setInvestments([]);
+      setTotalInvested(0);
+      setTotalProjects(0);
     } finally {
       setLoading(false);
       setRefreshing(false);
