@@ -23,6 +23,7 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [totalInvested, setTotalInvested] = useState(0);
   const [totalProjects, setTotalProjects] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ const ProfileScreen = () => {
         setInvestments([]);
         setTotalInvested(0);
         setTotalProjects(0);
+        setTotalPoints(0);
         return;
       }
       
@@ -88,8 +90,10 @@ const ProfileScreen = () => {
       
       // Calculate totals based on actual investment amounts
       const total = investmentsWithPosts.reduce((sum, inv) => sum + inv.investmentAmount, 0);
+      const points = investmentsWithPosts.reduce((sum, inv) => sum + calculatePoints(inv.investmentAmount), 0);
       setTotalInvested(total);
       setTotalProjects(investmentsWithPosts.length);
+      setTotalPoints(points);
       
       console.log('Investor investments fetched:', {
         totalInvestments: investmentsWithPosts.length,
@@ -102,6 +106,7 @@ const ProfileScreen = () => {
       setInvestments([]);
       setTotalInvested(0);
       setTotalProjects(0);
+      setTotalPoints(0);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -121,6 +126,11 @@ const ProfileScreen = () => {
 
   const calculateProgress = (funded, goal) => {
     return Math.min((funded / goal) * 100, 100);
+  };
+
+  // Calculate points based on investment amount (10 points per dollar)
+  const calculatePoints = (amount) => {
+    return Math.round(amount * 10);
   };
 
   if (userRole !== 'investor') {
@@ -187,6 +197,12 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>
+            {totalPoints.toLocaleString()}
+          </Text>
+          <Text style={styles.statLabel}>Total Points</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>
             {totalProjects > 0 ? Math.round(totalInvested / totalProjects) : 0}
           </Text>
           <Text style={styles.statLabel}>Avg. Investment</Text>
@@ -223,6 +239,9 @@ const ProfileScreen = () => {
                       ${investment.investmentAmount.toLocaleString()}
                     </Text>
                     <Text style={styles.amountLabel}>invested</Text>
+                    <Text style={styles.pointsText}>
+                      ⭐ {calculatePoints(investment.investmentAmount).toLocaleString()} pts
+                    </Text>
                   </View>
                 </View>
 
@@ -385,6 +404,7 @@ const styles = StyleSheet.create({
   // Stats Section
   statsSection: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     padding: 20,
     gap: 12,
     ...(isWeb && {
@@ -394,6 +414,7 @@ const styles = StyleSheet.create({
     }),
   },
   statCard: {
+    minWidth: isWeb ? 200 : undefined,
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
@@ -542,6 +563,12 @@ const styles = StyleSheet.create({
   amountLabel: {
     fontSize: 12,
     color: '#666',
+  },
+  pointsText: {
+    fontSize: 11,
+    color: '#ff9800',
+    fontWeight: '600',
+    marginTop: 4,
   },
   investmentImage: {
     width: '100%',
