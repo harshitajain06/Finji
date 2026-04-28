@@ -6,7 +6,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer, useNavigation } from '@re
 import { createStackNavigator } from "@react-navigation/stack";
 import { signOut } from 'firebase/auth';
 import React from "react";
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, useWindowDimensions } from 'react-native';
 import NotFoundScreen from "../+not-found";
 import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
@@ -20,6 +20,7 @@ import PostScreen from "./PostScreen";
 import ProfileScreen from "./ProfileScreen";
 
 const isWeb = Platform.OS === 'web';
+const WEB_FIXED_TABBAR_MIN_WIDTH = 768;
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -29,6 +30,8 @@ const Drawer = createDrawerNavigator();
 const BottomTabs = () => {
   const colorScheme = useColorScheme();
   const { userRole, isLoading, user } = useUserRole();
+  const { width } = useWindowDimensions();
+  const useFixedWebTabBar = isWeb && width >= WEB_FIXED_TABBAR_MIN_WIDTH;
 
 
   // Show loading state while determining user role
@@ -48,7 +51,7 @@ const BottomTabs = () => {
         tabBarInactiveTintColor: "gray",
         tabBarStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].background,
-          ...(isWeb && {
+          ...(useFixedWebTabBar && {
             position: 'fixed',
             bottom: 0,
             left: 0,
@@ -74,7 +77,7 @@ const BottomTabs = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        ...(isWeb && {
+        ...(useFixedWebTabBar && {
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: '600',
@@ -211,7 +214,7 @@ export default function StackLayout() {
           contentStyle: {
             backgroundColor: Colors[colorScheme ?? "light"].background,
             ...(isWeb && {
-              minHeight: '100vh',
+              minHeight: '100%',
             }),
           },
         }}

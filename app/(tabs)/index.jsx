@@ -18,6 +18,7 @@ import { useUserRole } from '../../contexts/UserRoleContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
+const isSmallScreen = screenWidth < 380;
 
 export default function AuthPage() {
   const navigation = useNavigation();
@@ -257,8 +258,10 @@ function OAuthButtons() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: isWeb ? 40 : 24,
-    paddingTop: isWeb ? 80 : 60,
+    flexGrow: 1,
+    padding: isWeb ? 40 : (isSmallScreen ? 16 : 20),
+    paddingTop: isWeb ? 80 : (isSmallScreen ? 28 : 40),
+    paddingBottom: isWeb ? 40 : (isSmallScreen ? 24 : 32),
     backgroundColor: '#fff',
     minHeight: '100%',
   },
@@ -269,11 +272,11 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: isWeb ? 24 : 16,
+    marginBottom: isWeb ? 24 : (isSmallScreen ? 10 : 12),
   },
   logoContainer: {
     backgroundColor: '#e6f0ff',
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     borderRadius: 999,
     ...(isWeb && {
       transition: 'transform 0.2s ease',
@@ -284,21 +287,21 @@ const styles = StyleSheet.create({
     }),
   },
   logo: {
-    width: isWeb ? 80 : 64,
-    height: isWeb ? 80 : 64,
-    borderRadius: isWeb ? 40 : 32,
+    width: isWeb ? 80 : (isSmallScreen ? 52 : 60),
+    height: isWeb ? 80 : (isSmallScreen ? 52 : 60),
+    borderRadius: isWeb ? 40 : (isSmallScreen ? 26 : 30),
   },
   title: {
-    fontSize: isWeb ? 32 : 24,
+    fontSize: isWeb ? 32 : (isSmallScreen ? 20 : 22),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: isWeb ? 40 : 30,
+    marginBottom: isWeb ? 40 : (isSmallScreen ? 18 : 22),
   },
   
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: isWeb ? 32 : 24,
+    marginBottom: isWeb ? 32 : (isSmallScreen ? 14 : 18),
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
     ...(isWeb && {
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: isWeb ? 16 : 12,
+    paddingVertical: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     alignItems: 'center',
     borderRadius: 12,
     cursor: isWeb ? 'pointer' : 'default',
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f0ff',
   },
   tabText: {
-    fontSize: isWeb ? 18 : 16,
+    fontSize: isWeb ? 18 : (isSmallScreen ? 14 : 15),
     color: '#6c757d',
     fontWeight: '600',
   },
@@ -330,19 +333,19 @@ const styles = StyleSheet.create({
     color: '#007bff',
   },
   label: {
-    marginBottom: isWeb ? 8 : 6,
+    marginBottom: isWeb ? 8 : (isSmallScreen ? 4 : 6),
     fontWeight: '500',
     color: '#212529',
-    fontSize: isWeb ? 16 : 14,
+    fontSize: isWeb ? 16 : (isSmallScreen ? 13 : 14),
   },
   form: {
-    marginBottom: isWeb ? 40 : 30,
+    marginBottom: isWeb ? 40 : (isSmallScreen ? 18 : 22),
   },
   input: {
     backgroundColor: '#fff',
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     borderRadius: 8,
-    marginBottom: isWeb ? 16 : 12,
+    marginBottom: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     borderWidth: 1,
     borderColor: '#ced4da',
     fontSize: isWeb ? 16 : 16,
@@ -357,11 +360,11 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignItems: 'flex-end',
-    marginBottom: isWeb ? 20 : 16,
+    marginBottom: isWeb ? 20 : (isSmallScreen ? 10 : 14),
   },
   forgotPasswordText: {
     color: '#007bff',
-    fontSize: isWeb ? 14 : 13,
+    fontSize: isWeb ? 14 : (isSmallScreen ? 12 : 13),
     cursor: isWeb ? 'pointer' : 'default',
     ...(isWeb && {
       transition: 'color 0.2s ease',
@@ -373,7 +376,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#cce0ff',
-    padding: isWeb ? 18 : 14,
+    padding: isWeb ? 18 : (isSmallScreen ? 12 : 14),
     borderRadius: 8,
     alignItems: 'center',
     cursor: isWeb ? 'pointer' : 'default',
@@ -392,15 +395,15 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: isWeb ? 18 : 16,
+    fontSize: isWeb ? 18 : (isSmallScreen ? 14 : 16),
   },
   oauthButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#dee2e6',
     borderRadius: 8,
-    paddingVertical: isWeb ? 14 : 12,
-    paddingHorizontal: isWeb ? 12 : 10,
+    paddingVertical: isWeb ? 14 : (isSmallScreen ? 10 : 12),
+    paddingHorizontal: isWeb ? 12 : (isSmallScreen ? 8 : 10),
     flex: 1,
     alignItems: 'center',
     cursor: isWeb ? 'pointer' : 'default',
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
     }),
   },
   oauthButtonText: {
-    fontSize: isWeb ? 15 : 14,
+    fontSize: isWeb ? 15 : (isSmallScreen ? 13 : 14),
     fontWeight: '600',
     color: '#343a40',
   },
@@ -427,7 +430,7 @@ const styles = StyleSheet.create({
   privacyPolicy: {
     textAlign: 'center',
     marginTop: 4,
-    fontSize: isWeb ? 13 : 12,
+    fontSize: isWeb ? 13 : (isSmallScreen ? 11 : 12),
     color: '#007bff',
     textDecorationLine: 'underline',
     cursor: isWeb ? 'pointer' : 'default',
@@ -440,15 +443,15 @@ const styles = StyleSheet.create({
   },
   roleContainer: {
     flexDirection: 'row',
-    marginBottom: isWeb ? 16 : 12,
+    marginBottom: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
     padding: 4,
   },
   roleButton: {
     flex: 1,
-    paddingVertical: isWeb ? 12 : 10,
-    paddingHorizontal: isWeb ? 16 : 12,
+    paddingVertical: isWeb ? 12 : (isSmallScreen ? 9 : 10),
+    paddingHorizontal: isWeb ? 16 : (isSmallScreen ? 10 : 12),
     alignItems: 'center',
     borderRadius: 6,
     cursor: isWeb ? 'pointer' : 'default',
@@ -463,7 +466,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f0ff',
   },
   roleButtonText: {
-    fontSize: isWeb ? 14 : 13,
+    fontSize: isWeb ? 14 : (isSmallScreen ? 12 : 13),
     color: '#6c757d',
     fontWeight: '600',
   },

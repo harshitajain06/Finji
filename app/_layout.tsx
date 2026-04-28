@@ -1,9 +1,14 @@
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { Platform } from 'react-native';
 
 import { UserRoleProvider } from '../contexts/UserRoleContext';
 import StackLayout from './(tabs)/_layout';
+
+if (Platform.OS === 'web') {
+  require('./web-styles.css');
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({

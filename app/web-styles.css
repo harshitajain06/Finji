@@ -1,5 +1,35 @@
 /* Web-specific styles for Finji app */
 
+/* Mobile-first web viewport + overflow safety */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Expo web root */
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+/* Prefer dynamic viewport height on mobile browsers */
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Global web enhancements */
 @media (min-width: 768px) {
   /* Prevent body scroll when modal is open */

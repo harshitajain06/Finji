@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.finance.Finji"
     },
     "web": {
       "bundler": "metro",
@@ -34,9 +35,15 @@
           "backgroundColor": "#ffffff"
         }
       ]
-    ], 
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3cf17212-2037-4cf5-8853-d427285d1557"
+      }
     }
   }
 }

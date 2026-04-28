@@ -346,7 +346,8 @@ const styles = StyleSheet.create({
   scrollContainer: { 
     alignItems: "center",
     paddingHorizontal: isWeb ? 40 : 20,
-    paddingBottom: isWeb ? 60 : 40,
+    // Extra space so content isn't covered by bottom tab bar (especially on mobile web)
+    paddingBottom: isWeb ? 110 : 40,
   },
   
 
