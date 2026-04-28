@@ -239,8 +239,8 @@ export default function AuthPage() {
 
 function OAuthButtons() {
   return (
-    <View style={{ marginTop: 16 }}>
-      <View style={{ alignItems: 'center', marginBottom: 12 }}>
+    <View style={{ marginTop: isSmallScreen ? 10 : 16 }}>
+      <View style={{ alignItems: 'center', marginBottom: isSmallScreen ? 8 : 12 }}>
         <Text style={{ fontSize: 12, color: '#6c757d' }}>Or continue with</Text>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
@@ -259,24 +259,25 @@ function OAuthButtons() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: isWeb ? 40 : (isSmallScreen ? 16 : 20),
-    paddingTop: isWeb ? 80 : (isSmallScreen ? 28 : 40),
-    paddingBottom: isWeb ? 40 : (isSmallScreen ? 24 : 32),
+    padding: isWeb ? 28 : (isSmallScreen ? 16 : 20),
+    paddingTop: isWeb ? 56 : (isSmallScreen ? 18 : 34),
+    // Extra bottom space so the last items never look "cut off" on short screens
+    paddingBottom: isWeb ? 40 : (isSmallScreen ? 44 : 36),
     backgroundColor: '#fff',
     minHeight: '100%',
   },
   contentWrapper: {
-    maxWidth: isWeb ? 500 : '100%',
+    maxWidth: isWeb ? 420 : '100%',
     width: '100%',
     alignSelf: 'center',
   },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: isWeb ? 24 : (isSmallScreen ? 10 : 12),
+    marginBottom: isWeb ? 24 : (isSmallScreen ? 6 : 10),
   },
   logoContainer: {
     backgroundColor: '#e6f0ff',
-    padding: isWeb ? 16 : (isSmallScreen ? 10 : 12),
+    padding: isWeb ? 12 : (isSmallScreen ? 10 : 12),
     borderRadius: 999,
     ...(isWeb && {
       transition: 'transform 0.2s ease',
@@ -287,21 +288,21 @@ const styles = StyleSheet.create({
     }),
   },
   logo: {
-    width: isWeb ? 80 : (isSmallScreen ? 52 : 60),
-    height: isWeb ? 80 : (isSmallScreen ? 52 : 60),
-    borderRadius: isWeb ? 40 : (isSmallScreen ? 26 : 30),
+    width: isWeb ? 64 : (isSmallScreen ? 52 : 60),
+    height: isWeb ? 64 : (isSmallScreen ? 52 : 60),
+    borderRadius: isWeb ? 32 : (isSmallScreen ? 26 : 30),
   },
   title: {
-    fontSize: isWeb ? 32 : (isSmallScreen ? 20 : 22),
+    fontSize: isWeb ? 26 : (isSmallScreen ? 20 : 22),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: isWeb ? 40 : (isSmallScreen ? 18 : 22),
+    marginBottom: isWeb ? 40 : (isSmallScreen ? 12 : 18),
   },
   
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: isWeb ? 32 : (isSmallScreen ? 14 : 18),
+    marginBottom: isWeb ? 20 : (isSmallScreen ? 14 : 18),
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
     ...(isWeb && {
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: isWeb ? 16 : (isSmallScreen ? 10 : 12),
+    paddingVertical: isWeb ? 12 : (isSmallScreen ? 10 : 12),
     alignItems: 'center',
     borderRadius: 12,
     cursor: isWeb ? 'pointer' : 'default',
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f0ff',
   },
   tabText: {
-    fontSize: isWeb ? 18 : (isSmallScreen ? 14 : 15),
+    fontSize: isWeb ? 15 : (isSmallScreen ? 14 : 15),
     color: '#6c757d',
     fontWeight: '600',
   },
@@ -336,19 +337,19 @@ const styles = StyleSheet.create({
     marginBottom: isWeb ? 8 : (isSmallScreen ? 4 : 6),
     fontWeight: '500',
     color: '#212529',
-    fontSize: isWeb ? 16 : (isSmallScreen ? 13 : 14),
+    fontSize: isWeb ? 14 : (isSmallScreen ? 13 : 14),
   },
   form: {
-    marginBottom: isWeb ? 40 : (isSmallScreen ? 18 : 22),
+    marginBottom: isWeb ? 24 : (isSmallScreen ? 14 : 20),
   },
   input: {
     backgroundColor: '#fff',
-    padding: isWeb ? 16 : (isSmallScreen ? 10 : 12),
+    padding: isWeb ? 12 : (isSmallScreen ? 10 : 12),
     borderRadius: 8,
-    marginBottom: isWeb ? 16 : (isSmallScreen ? 10 : 12),
+    marginBottom: isWeb ? 12 : (isSmallScreen ? 10 : 12),
     borderWidth: 1,
     borderColor: '#ced4da',
-    fontSize: isWeb ? 16 : 16,
+    fontSize: isWeb ? 14 : 16,
     ...(isWeb && {
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
       cursor: 'text',
@@ -360,11 +361,11 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignItems: 'flex-end',
-    marginBottom: isWeb ? 20 : (isSmallScreen ? 10 : 14),
+    marginBottom: isWeb ? 14 : (isSmallScreen ? 10 : 14),
   },
   forgotPasswordText: {
     color: '#007bff',
-    fontSize: isWeb ? 14 : (isSmallScreen ? 12 : 13),
+    fontSize: isWeb ? 13 : (isSmallScreen ? 12 : 13),
     cursor: isWeb ? 'pointer' : 'default',
     ...(isWeb && {
       transition: 'color 0.2s ease',
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#cce0ff',
-    padding: isWeb ? 18 : (isSmallScreen ? 12 : 14),
+    padding: isWeb ? 14 : (isSmallScreen ? 12 : 14),
     borderRadius: 8,
     alignItems: 'center',
     cursor: isWeb ? 'pointer' : 'default',
@@ -395,15 +396,15 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: isWeb ? 18 : (isSmallScreen ? 14 : 16),
+    fontSize: isWeb ? 15 : (isSmallScreen ? 14 : 16),
   },
   oauthButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#dee2e6',
     borderRadius: 8,
-    paddingVertical: isWeb ? 14 : (isSmallScreen ? 10 : 12),
-    paddingHorizontal: isWeb ? 12 : (isSmallScreen ? 8 : 10),
+    paddingVertical: isWeb ? 12 : (isSmallScreen ? 10 : 12),
+    paddingHorizontal: isWeb ? 10 : (isSmallScreen ? 8 : 10),
     flex: 1,
     alignItems: 'center',
     cursor: isWeb ? 'pointer' : 'default',
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
     }),
   },
   oauthButtonText: {
-    fontSize: isWeb ? 15 : (isSmallScreen ? 13 : 14),
+    fontSize: isWeb ? 13 : (isSmallScreen ? 13 : 14),
     fontWeight: '600',
     color: '#343a40',
   },
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
   privacyPolicy: {
     textAlign: 'center',
     marginTop: 4,
-    fontSize: isWeb ? 13 : (isSmallScreen ? 11 : 12),
+    fontSize: isWeb ? 12 : (isSmallScreen ? 11 : 12),
     color: '#007bff',
     textDecorationLine: 'underline',
     cursor: isWeb ? 'pointer' : 'default',
