@@ -1,7 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
 import { auth } from "../../config/firebase";
 import HomeScreen from "./HomeScreen";
 
@@ -22,7 +28,9 @@ export default function WelcomeScreen() {
       {/* Login to Apply Button at Top - Fixed Position */}
       <View style={styles.topButtonContainer}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("LoginRegister", { mode: "login" })}
+          onPress={() =>
+            navigation.navigate("LoginRegister", { mode: "login" })
+          }
           style={styles.loginToApplyButton}
           disabled={loading}
         >
@@ -69,4 +77,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-
