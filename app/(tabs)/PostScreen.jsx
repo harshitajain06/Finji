@@ -4,7 +4,6 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import {
     Alert,
-    Dimensions,
     Image,
     Platform,
     ScrollView,
@@ -13,12 +12,12 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    useWindowDimensions,
 } from "react-native";
 import InfoIcon from "../../components/InfoIcon";
 import { db, storage } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
-const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 // ✅ For web alerts
@@ -32,6 +31,9 @@ const showMessage = (msg, type = "success") => {
 
 const CreateFundingPostScreen = () => {
   const { user, userRole } = useUserRole();
+  const { width: viewportWidth } = useWindowDimensions();
+  const isNarrow = viewportWidth < 768;
+
   const [applicantName, setApplicantName] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
@@ -214,17 +216,20 @@ const CreateFundingPostScreen = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.header}>Loading...</Text>
+      <View style={[styles.container(isNarrow), { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={styles.header(isNarrow)}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
+    <ScrollView
+      contentContainerStyle={styles.container(isNarrow)}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.card(isNarrow)}>
         <View style={styles.headerContainer}>
-          <Text style={styles.header}>
+          <Text style={styles.header(isNarrow)}>
             {isEditMode ? "✏️ Edit Funding Request" : "💰 Create Funding Request"}
           </Text>
           <InfoIcon 
@@ -235,34 +240,34 @@ const CreateFundingPostScreen = () => {
         </View>
         
         {isEditMode && (
-          <View style={styles.editModeBanner}>
-            <Text style={styles.editModeText}>
+          <View style={styles.editModeBanner(isNarrow)}>
+            <Text style={styles.editModeText(isNarrow)}>
               📝 You already have a funding request. You can edit it here.
             </Text>
           </View>
         )}
 
-        <View style={styles.formGrid}>
+        <View style={styles.formGrid(isNarrow)}>
           <View style={styles.formSection}>
-            <Text style={styles.label}>Name *</Text>
+            <Text style={styles.label(isNarrow)}>Name *</Text>
             <TextInput
-              style={styles.input}
+              style={styles.input(isNarrow)}
               value={applicantName}
               onChangeText={setApplicantName}
               placeholder="Your name or organization"
             />
 
-            <Text style={styles.label}>Location *</Text>
+            <Text style={styles.label(isNarrow)}>Location *</Text>
             <TextInput
-              style={styles.input}
+              style={styles.input(isNarrow)}
               value={location}
               onChangeText={setLocation}
               placeholder="City, Country"
             />
 
-            <Text style={styles.label}>Business Category</Text>
+            <Text style={styles.label(isNarrow)}>Business Category</Text>
             <TextInput
-              style={styles.input}
+              style={styles.input(isNarrow)}
               value={category}
               onChangeText={setCategory}
               placeholder="e.g., Farming, Retail, Food"
@@ -270,18 +275,18 @@ const CreateFundingPostScreen = () => {
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>Funding Goal (USD) *</Text>
+            <Text style={styles.label(isNarrow)}>Funding Goal (USD) *</Text>
             <TextInput
-              style={styles.input}
+              style={styles.input(isNarrow)}
               value={goalAmount}
               onChangeText={setGoalAmount}
               keyboardType="numeric"
               placeholder="e.g., 1000"
             />
 
-            <Text style={styles.label}>Days to Reach Goal</Text>
+            <Text style={styles.label(isNarrow)}>Days to Reach Goal</Text>
             <TextInput
-              style={styles.input}
+              style={styles.input(isNarrow)}
               value={daysRemaining}
               onChangeText={setDaysRemaining}
               keyboardType="numeric"
@@ -290,53 +295,53 @@ const CreateFundingPostScreen = () => {
           </View>
         </View>
 
-        <Text style={styles.label}>How Will the Funds Be Used? *</Text>
+        <Text style={styles.label(isNarrow)}>How Will the Funds Be Used? *</Text>
         <TextInput
-          style={styles.inputMulti}
+          style={styles.inputMulti(isNarrow)}
           value={useOfFunds}
           onChangeText={setUseOfFunds}
           multiline
           placeholder="Describe how the money will help"
         />
 
-        <Text style={styles.label}>About You / Business *</Text>
+        <Text style={styles.label(isNarrow)}>About You / Business *</Text>
         <TextInput
-          style={styles.inputMulti}
+          style={styles.inputMulti(isNarrow)}
           value={description}
           onChangeText={setDescription}
           multiline
           placeholder="Brief background or story"
         />
 
-        <Text style={styles.label}>Team Members (optional)</Text>
+        <Text style={styles.label(isNarrow)}>Team Members (optional)</Text>
         <TextInput
-          style={styles.input}
+          style={styles.input(isNarrow)}
           value={teamMembers}
           onChangeText={setTeamMembers}
           placeholder="Comma separated names if any"
         />
 
-        <Text style={styles.label}>Loan Purpose (optional)</Text>
+        <Text style={styles.label(isNarrow)}>Loan Purpose (optional)</Text>
         <TextInput
-          style={styles.inputMulti}
+          style={styles.inputMulti(isNarrow)}
           value={loanPurpose}
           onChangeText={setLoanPurpose}
           multiline
           placeholder="Explain why this loan is important"
         />
 
-        <Text style={styles.label}>Photo (optional)</Text>
-        <TouchableOpacity onPress={handleImagePick} style={styles.imageButton}>
-          <Text style={styles.imageButtonText}>📷 Pick Image</Text>
+        <Text style={styles.label(isNarrow)}>Photo (optional)</Text>
+        <TouchableOpacity onPress={handleImagePick} style={styles.imageButton(isNarrow)}>
+          <Text style={styles.imageButtonText(isNarrow)}>📷 Pick Image</Text>
         </TouchableOpacity>
-        {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+        {image && <Image source={{ uri: image }} style={styles.imagePreview(isNarrow)} />}
 
         <TouchableOpacity
-          style={[styles.button, uploading && { backgroundColor: "#aaa" }]}
+          style={[styles.button(isNarrow), uploading && { backgroundColor: "#aaa" }]}
           onPress={handleSubmit}
           disabled={uploading}
         >
-          <Text style={styles.buttonText}>
+          <Text style={styles.buttonText(isNarrow)}>
             {uploading 
               ? (isEditMode ? "Updating..." : "Submitting...") 
               : (isEditMode ? "💾 Update Request" : "🚀 Submit Request")
@@ -346,11 +351,11 @@ const CreateFundingPostScreen = () => {
 
         {isEditMode && (
           <TouchableOpacity
-            style={[styles.secondaryButton, uploading && { backgroundColor: "#ccc" }]}
+            style={[styles.secondaryButton(isNarrow), uploading && { backgroundColor: "#ccc" }]}
             onPress={handleCreateNew}
             disabled={uploading}
           >
-            <Text style={styles.secondaryButtonText}>
+            <Text style={styles.secondaryButtonText(isNarrow)}>
               🆕 Create New Post
             </Text>
           </TouchableOpacity>
@@ -363,19 +368,19 @@ const CreateFundingPostScreen = () => {
 export default CreateFundingPostScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    padding: isWeb ? 40 : 20,
+  container: (isNarrow) => ({
+    padding: isWeb ? (isNarrow ? 14 : 40) : 20,
     backgroundColor: "#f5f7fa",
     flexGrow: 1,
     alignItems: "center",
     minHeight: isWeb ? '100vh' : undefined,
-  },
-  card: {
+  }),
+  card: (isNarrow) => ({
     backgroundColor: "#fff",
-    padding: isWeb ? 40 : 20,
+    padding: isWeb ? (isNarrow ? 16 : 40) : 20,
     borderRadius: 20,
     width: "100%",
-    maxWidth: isWeb ? 800 : 600,
+    maxWidth: isWeb ? (isNarrow ? 520 : 800) : 600,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -389,41 +394,41 @@ const styles = StyleSheet.create({
         boxShadow: '0 12px 50px rgba(0,0,0,0.15)',
       }
     }),
-  },
-  header: {
-    fontSize: isWeb ? 32 : 26,
+  }),
+  header: (isNarrow) => ({
+    fontSize: isWeb ? (isNarrow ? 24 : 32) : 26,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: isWeb ? 30 : 20,
+    marginBottom: isWeb ? (isNarrow ? 16 : 30) : 20,
     color: "#2c3e50",
-  },
+  }),
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: isWeb ? 30 : 20,
+    marginBottom: isWeb ? 20 : 20,
   },
   headerInfoIcon: {
     marginLeft: 10,
   },
-  formGrid: {
-    flexDirection: isWeb ? 'row' : 'column',
-    gap: isWeb ? 20 : 0,
+  formGrid: (isNarrow) => ({
+    flexDirection: isWeb ? (isNarrow ? 'column' : 'row') : 'column',
+    gap: isWeb ? (isNarrow ? 0 : 20) : 0,
     marginBottom: 20,
-  },
+  }),
   formSection: {
     flex: isWeb ? 1 : undefined,
   },
-  label: {
-    marginTop: isWeb ? 20 : 12,
+  label: (isNarrow) => ({
+    marginTop: isWeb ? (isNarrow ? 14 : 20) : 12,
     fontWeight: "600",
-    fontSize: isWeb ? 16 : 15,
+    fontSize: isWeb ? (isNarrow ? 15 : 16) : 15,
     color: "#333",
-  },
-  input: {
+  }),
+  input: (isNarrow) => ({
     backgroundColor: "#fdfdfd",
     borderRadius: 12,
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? (isNarrow ? 12 : 16) : 12,
     borderWidth: 1,
     borderColor: "#ddd",
     marginTop: 6,
@@ -436,15 +441,15 @@ const styles = StyleSheet.create({
         boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
       }
     }),
-  },
-  inputMulti: {
+  }),
+  inputMulti: (isNarrow) => ({
     backgroundColor: "#fdfdfd",
     borderRadius: 12,
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? (isNarrow ? 12 : 16) : 12,
     borderWidth: 1,
     borderColor: "#ddd",
     marginTop: 6,
-    minHeight: isWeb ? 120 : 90,
+    minHeight: isWeb ? (isNarrow ? 110 : 120) : 90,
     textAlignVertical: "top",
     fontSize: isWeb ? 16 : undefined, // Prevent zoom on iOS
     ...(isWeb && {
@@ -456,10 +461,10 @@ const styles = StyleSheet.create({
         boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
       }
     }),
-  },
-  button: {
+  }),
+  button: (isNarrow) => ({
     backgroundColor: "#28a745",
-    padding: isWeb ? 20 : 16,
+    padding: isWeb ? (isNarrow ? 16 : 20) : 16,
     marginTop: isWeb ? 30 : 24,
     borderRadius: 12,
     alignItems: "center",
@@ -475,15 +480,15 @@ const styles = StyleSheet.create({
         transform: 'translateY(0)',
       }
     }),
-  },
-  buttonText: {
+  }),
+  buttonText: (isNarrow) => ({
     color: "white",
     fontWeight: "700",
-    fontSize: isWeb ? 18 : 16,
-  },
-  secondaryButton: {
+    fontSize: isWeb ? (isNarrow ? 16 : 18) : 16,
+  }),
+  secondaryButton: (isNarrow) => ({
     backgroundColor: "#6c757d",
-    padding: isWeb ? 20 : 16,
+    padding: isWeb ? (isNarrow ? 16 : 20) : 16,
     borderRadius: isWeb ? 12 : 8,
     marginTop: 12,
     ...(isWeb && {
@@ -494,16 +499,16 @@ const styles = StyleSheet.create({
         transform: "translateY(-2px)",
       },
     }),
-  },
-  secondaryButtonText: {
+  }),
+  secondaryButtonText: (isNarrow) => ({
     color: "white",
     fontWeight: "600",
-    fontSize: isWeb ? 16 : 14,
+    fontSize: isWeb ? (isNarrow ? 15 : 16) : 14,
     textAlign: "center",
-  },
-  imageButton: {
+  }),
+  imageButton: (isNarrow) => ({
     marginTop: 10,
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? (isNarrow ? 12 : 16) : 12,
     backgroundColor: "#007bff",
     borderRadius: 10,
     alignItems: "center",
@@ -515,15 +520,15 @@ const styles = StyleSheet.create({
         transform: 'translateY(-1px)',
       }
     }),
-  },
-  imageButtonText: {
+  }),
+  imageButtonText: (isNarrow) => ({
     color: "white",
     fontWeight: "600",
-    fontSize: isWeb ? 16 : 14,
-  },
-  imagePreview: {
+    fontSize: isWeb ? (isNarrow ? 15 : 16) : 14,
+  }),
+  imagePreview: (isNarrow) => ({
     marginTop: 12,
-    height: isWeb ? 250 : 200,
+    height: isWeb ? (isNarrow ? 200 : 250) : 200,
     width: "100%",
     borderRadius: 12,
     resizeMode: "cover",
@@ -534,19 +539,19 @@ const styles = StyleSheet.create({
         transform: 'scale(1.02)',
       }
     }),
-  },
-  editModeBanner: {
+  }),
+  editModeBanner: (isNarrow) => ({
     backgroundColor: "#e3f2fd",
-    padding: isWeb ? 16 : 12,
+    padding: isWeb ? (isNarrow ? 12 : 16) : 12,
     borderRadius: 8,
     marginBottom: isWeb ? 20 : 16,
     borderLeftWidth: 4,
     borderLeftColor: "#2196f3",
-  },
-  editModeText: {
+  }),
+  editModeText: (isNarrow) => ({
     color: "#1976d2",
-    fontSize: isWeb ? 14 : 13,
+    fontSize: isWeb ? (isNarrow ? 13 : 14) : 13,
     fontWeight: "500",
     textAlign: "center",
-  },
+  }),
 });
