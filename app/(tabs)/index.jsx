@@ -11,7 +11,8 @@ import {
     ScrollView,
     StyleSheet,
     Text, TextInput, TouchableOpacity,
-    View
+    View,
+    useWindowDimensions,
 } from 'react-native';
 import { auth } from '../../config/firebase';
 import { useUserRole } from '../../contexts/UserRoleContext';
@@ -25,6 +26,12 @@ export default function AuthPage() {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const { setUserRole } = useUserRole();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  // Web "5-inch" viewport tuning (mobile browser/device mode)
+  const isWebMobileViewport = isWeb && windowWidth <= 430;
+  const isWebShortViewport = isWebMobileViewport && windowHeight <= 700;
+  const isWebUltraShortViewport = isWebMobileViewport && windowHeight <= 620;
 
   const [user, loading, error] = useAuthState(auth);
 
@@ -114,43 +121,45 @@ export default function AuthPage() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
+        isWebShortViewport && styles.containerWebShort,
+        isWebUltraShortViewport && styles.containerWebUltraShort,
         isDarkMode && { backgroundColor: '#121212' },
       ]}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.contentWrapper}>
-        <View style={styles.iconContainer}>
-          <View style={styles.logoContainer}>
+      <View style={[styles.contentWrapper, isWebShortViewport && styles.contentWrapperWebShort]}>
+        <View style={[styles.iconContainer, isWebShortViewport && styles.iconContainerWebShort]}>
+          <View style={[styles.logoContainer, isWebShortViewport && styles.logoContainerWebShort]}>
             <Image 
               source={require('../../assets/images/Logo.jpeg')} 
-              style={styles.logo}
+              style={[styles.logo, isWebShortViewport && styles.logoWebShort]}
               resizeMode="contain"
             />
           </View>
         </View>
-        <Text style={[styles.title, isDarkMode && { color: '#fff' }]}>
+        <Text style={[styles.title, isWebShortViewport && styles.titleWebShort, isDarkMode && { color: '#fff' }]}>
           Welcome to Finji
         </Text>
 
         {/* Tabs */}
-        <View style={styles.tabContainer}>
+        <View style={[styles.tabContainer, isWebShortViewport && styles.tabContainerWebShort]}>
           <TouchableOpacity
             onPress={() => setMode('login')}
             style={[styles.tab, mode === 'login' && styles.activeTabBackground]}
           >
-            <Text style={[styles.tabText, mode === 'login' && styles.activeTabText]}>Login</Text>
+            <Text style={[styles.tabText, isWebShortViewport && styles.tabTextWebShort, mode === 'login' && styles.activeTabText]}>Login</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setMode('register')}
             style={[styles.tab, mode === 'register' && styles.activeTabBackground]}
           >
-            <Text style={[styles.tabText, mode === 'register' && styles.activeTabText]}>Register</Text>
+            <Text style={[styles.tabText, isWebShortViewport && styles.tabTextWebShort, mode === 'register' && styles.activeTabText]}>Register</Text>
           </TouchableOpacity>
         </View>
 
         {/* Forms */}
         {mode === 'login' ? (
-          <View style={styles.form}>
+          <View style={[styles.form, isWebShortViewport && styles.formWebShort]}>
             <Text style={styles.label}>Email</Text>
             <TextInput
               placeholder="name@example.com"
@@ -176,7 +185,7 @@ export default function AuthPage() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.form}>
+          <View style={[styles.form, isWebShortViewport && styles.formWebShort]}>
             <Text style={styles.label}>Full Name</Text>
             <TextInput
               placeholder="John Doe"
@@ -227,7 +236,7 @@ export default function AuthPage() {
         )}
 
         {/* OAuth Buttons */}
-        <OAuthButtons />
+        <OAuthButtons isCompact={isWebShortViewport} />
 
         <TouchableOpacity>
           <Text style={styles.privacyPolicy}>Privacy Policy.</Text>
@@ -237,11 +246,11 @@ export default function AuthPage() {
   );
 }
 
-function OAuthButtons() {
+function OAuthButtons({ isCompact }) {
   return (
-    <View style={{ marginTop: isSmallScreen ? 10 : 16 }}>
-      <View style={{ alignItems: 'center', marginBottom: isSmallScreen ? 8 : 12 }}>
-        <Text style={{ fontSize: 12, color: '#6c757d' }}>Or continue with</Text>
+    <View style={{ marginTop: isCompact ? 8 : (isSmallScreen ? 10 : (isWeb ? 12 : 16)) }}>
+      <View style={{ alignItems: 'center', marginBottom: isCompact ? 6 : (isSmallScreen ? 8 : 12) }}>
+        <Text style={{ fontSize: isCompact ? 11 : 12, color: '#6c757d' }}>Or continue with</Text>
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
         <TouchableOpacity style={styles.oauthButton} onPress={() => alert('Facebook login coming soon')}>
@@ -260,20 +269,36 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: isWeb ? 28 : (isSmallScreen ? 16 : 20),
-    paddingTop: isWeb ? 56 : (isSmallScreen ? 18 : 34),
+    paddingTop: isWeb ? 32 : (isSmallScreen ? 18 : 34),
     // Extra bottom space so the last items never look "cut off" on short screens
-    paddingBottom: isWeb ? 40 : (isSmallScreen ? 44 : 36),
+    paddingBottom: isWeb ? 24 : (isSmallScreen ? 44 : 36),
     backgroundColor: '#fff',
     minHeight: '100%',
+  },
+  // Compact web-mobile viewport (helps fit all content on ~5" screens)
+  containerWebShort: {
+    padding: 14,
+    paddingTop: 10,
+    paddingBottom: 18,
+  },
+  containerWebUltraShort: {
+    paddingTop: 8,
+    paddingBottom: 14,
   },
   contentWrapper: {
     maxWidth: isWeb ? 420 : '100%',
     width: '100%',
     alignSelf: 'center',
   },
+  contentWrapperWebShort: {
+    maxWidth: 360,
+  },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: isWeb ? 24 : (isSmallScreen ? 6 : 10),
+    marginBottom: isWeb ? 12 : (isSmallScreen ? 6 : 10),
+  },
+  iconContainerWebShort: {
+    marginBottom: 4,
   },
   logoContainer: {
     backgroundColor: '#e6f0ff',
@@ -287,27 +312,42 @@ const styles = StyleSheet.create({
       }
     }),
   },
+  logoContainerWebShort: {
+    padding: 8,
+  },
   logo: {
     width: isWeb ? 64 : (isSmallScreen ? 52 : 60),
     height: isWeb ? 64 : (isSmallScreen ? 52 : 60),
     borderRadius: isWeb ? 32 : (isSmallScreen ? 26 : 30),
   },
+  logoWebShort: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
   title: {
     fontSize: isWeb ? 26 : (isSmallScreen ? 20 : 22),
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: isWeb ? 40 : (isSmallScreen ? 12 : 18),
+    marginBottom: isWeb ? 16 : (isSmallScreen ? 12 : 18),
+  },
+  titleWebShort: {
+    fontSize: 20,
+    marginBottom: 10,
   },
   
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: isWeb ? 20 : (isSmallScreen ? 14 : 18),
+    marginBottom: isWeb ? 14 : (isSmallScreen ? 14 : 18),
     backgroundColor: '#f0f0f0',
     borderRadius: 12,
     ...(isWeb && {
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
     }),
+  },
+  tabContainerWebShort: {
+    marginBottom: 12,
   },
   tab: {
     flex: 1,
@@ -330,6 +370,9 @@ const styles = StyleSheet.create({
     color: '#6c757d',
     fontWeight: '600',
   },
+  tabTextWebShort: {
+    fontSize: 13,
+  },
   activeTabText: {
     color: '#007bff',
   },
@@ -340,7 +383,10 @@ const styles = StyleSheet.create({
     fontSize: isWeb ? 14 : (isSmallScreen ? 13 : 14),
   },
   form: {
-    marginBottom: isWeb ? 24 : (isSmallScreen ? 14 : 20),
+    marginBottom: isWeb ? 16 : (isSmallScreen ? 14 : 20),
+  },
+  formWebShort: {
+    marginBottom: 14,
   },
   input: {
     backgroundColor: '#fff',
