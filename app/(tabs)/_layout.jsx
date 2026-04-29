@@ -104,8 +104,6 @@ const BottomTabs = () => {
 const DrawerNavigator = () => {
   const navigation = useNavigation();
   const { userRole, isLoading } = useUserRole();
-  const { width } = useWindowDimensions();
-  const drawerWidth = Math.min(280, Math.round(width * 0.85));
 
   const handleLogout = async () => {
     try {
@@ -136,7 +134,7 @@ const DrawerNavigator = () => {
       screenOptions={{
         ...(isWeb && {
           drawerStyle: {
-            width: drawerWidth,
+            width: 280,
             backgroundColor: '#fff',
             boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
           },

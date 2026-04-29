@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
+    Dimensions,
     Image,
     Modal,
     Platform,
@@ -14,21 +15,16 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    useWindowDimensions,
 } from "react-native";
 import InfoIcon from "../../components/InfoIcon";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
+const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 const FundingPostsScreen = () => {
   const { user } = useUserRole();
-  const { width: viewportWidth } = useWindowDimensions();
-  const isWebWide = isWeb && viewportWidth >= 768;
-  const cardWidth = isWebWide
-    ? (viewportWidth > 1200 ? 350 : viewportWidth > 900 ? 320 : 280)
-    : '100%';
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -310,12 +306,7 @@ const FundingPostsScreen = () => {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContainer,
-          !isWebWide && styles.scrollContainerWebNarrow,
-        ]}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {filteredPosts.length === 0 ? (
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataIcon}>🤝</Text>
@@ -338,15 +329,11 @@ const FundingPostsScreen = () => {
               const isFullyFunded = post.funded >= post.goalAmount;
 
               return (
-                <View
-                  key={post.id}
-                  style={[
-                    styles.card,
-                    { width: cardWidth },
-                    isUrgent && styles.urgentCard,
-                    isAlmostFunded && styles.almostFundedCard,
-                  ]}
-                >
+                <View key={post.id} style={[
+                  styles.card,
+                  isUrgent && styles.urgentCard,
+                  isAlmostFunded && styles.almostFundedCard
+                ]}>
                   {/* Urgency Badge */}
                   {isUrgent && (
                     <View style={styles.urgencyBadge}>
@@ -778,10 +765,6 @@ const styles = StyleSheet.create({
     padding: isWeb ? 20 : 15,
     paddingBottom: 100,
   },
-  scrollContainerWebNarrow: {
-    padding: 12,
-    paddingBottom: 90,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -825,6 +808,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    width: isWeb ? (screenWidth > 1200 ? 350 : screenWidth > 768 ? 300 : 280) : '100%',
     maxWidth: isWeb ? 400 : undefined,
     cursor: isWeb ? 'pointer' : 'default',
     transition: isWeb ? 'all 0.2s ease' : undefined,
@@ -1008,7 +992,7 @@ const styles = StyleSheet.create({
   modalContentWeb: {
     maxWidth: 600,
     width: '100%',
-    alignSelf: 'center',
+    margin: '0 auto',
     maxHeight: '80vh',
   },
   modalImage: {
@@ -1143,7 +1127,7 @@ const styles = StyleSheet.create({
   confirmationModalWeb: {
     maxWidth: 500,
     width: '100%',
-    alignSelf: 'center',
+    margin: '0 auto',
     maxHeight: '80vh',
   },
   confirmationHeader: {

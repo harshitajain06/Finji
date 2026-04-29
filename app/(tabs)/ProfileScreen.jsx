@@ -2,24 +2,23 @@ import { collection, doc, getDoc, getDocs, orderBy, query, where } from "firebas
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Dimensions,
     Image,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    View,
-    useWindowDimensions,
+    View
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
+const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 const ProfileScreen = () => {
   const { user, userRole } = useUserRole();
-  const { width: viewportWidth } = useWindowDimensions();
-  const isWebWide = isWeb && viewportWidth >= 768;
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalInvested, setTotalInvested] = useState(0);
@@ -161,7 +160,7 @@ const ProfileScreen = () => {
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         {/* Header Section */}
-        <View style={[styles.headerSection, !isWebWide && styles.headerSectionWebNarrow]}>
+        <View style={styles.headerSection}>
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
@@ -187,22 +186,22 @@ const ProfileScreen = () => {
       </View>
 
       {/* Stats Section */}
-      <View style={[styles.statsSection, !isWebWide && styles.statsSectionWebNarrow]}>
-        <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
+      <View style={styles.statsSection}>
+        <View style={styles.statCard}>
           <Text style={styles.statValue}>${totalInvested.toLocaleString()}</Text>
           <Text style={styles.statLabel}>Total Invested</Text>
         </View>
-        <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
+        <View style={styles.statCard}>
           <Text style={styles.statValue}>{totalProjects}</Text>
           <Text style={styles.statLabel}>Projects Funded</Text>
         </View>
-        <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
+        <View style={styles.statCard}>
           <Text style={styles.statValue}>
             {totalPoints.toLocaleString()}
           </Text>
           <Text style={styles.statLabel}>Total Points</Text>
         </View>
-        <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
+        <View style={styles.statCard}>
           <Text style={styles.statValue}>
             {totalProjects > 0 ? Math.round(totalInvested / totalProjects) : 0}
           </Text>
@@ -333,11 +332,8 @@ const styles = StyleSheet.create({
     padding: isWeb ? 40 : 20,
     ...(isWeb && {
       boxShadow: '0 4px 20px rgba(0, 123, 255, 0.3)',
-      backgroundImage: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+      background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
     }),
-  },
-  headerSectionWebNarrow: {
-    padding: 20,
   },
   profileInfo: {
     flexDirection: 'row',
@@ -417,10 +413,6 @@ const styles = StyleSheet.create({
       width: '100%',
     }),
   },
-  statsSectionWebNarrow: {
-    padding: 12,
-    gap: 10,
-  },
   statCard: {
     minWidth: isWeb ? 200 : undefined,
     flex: 1,
@@ -438,9 +430,6 @@ const styles = StyleSheet.create({
       }
     }),
   },
-  statCardWebNarrow: {
-    minWidth: undefined,
-  },
   statValue: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -448,7 +437,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     ...(isWeb && {
       fontSize: 24,
-      backgroundImage: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+      background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
       backgroundClip: 'text',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
@@ -619,7 +608,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     borderRadius: 3,
     ...(isWeb && {
-      backgroundImage: 'linear-gradient(90deg, #007bff 0%, #0056b3 100%)',
+      background: 'linear-gradient(90deg, #007bff 0%, #0056b3 100%)',
       transition: 'width 0.5s ease',
     }),
   },
