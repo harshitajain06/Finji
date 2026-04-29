@@ -1,30 +1,40 @@
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, reload, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useNavigation } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import {
-    ActivityIndicator, Alert,
+    createUserWithEmailAndPassword,
+    reload,
+    signInWithEmailAndPassword,
+    updateProfile,
+} from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import {
+    ActivityIndicator,
+    Alert,
     Dimensions,
     Image,
     Platform,
     ScrollView,
     StyleSheet,
-    Text, TextInput, TouchableOpacity,
+    Text,
+    TextInput,
+    TouchableOpacity,
     View,
     useWindowDimensions,
-} from 'react-native';
-import { auth } from '../../config/firebase';
-import { useUserRole } from '../../contexts/UserRoleContext';
+} from "react-native";
+import { auth } from "../../config/firebase";
+import { useUserRole } from "../../contexts/UserRoleContext";
 
-const { width: screenWidth } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
+const { width: screenWidth } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
 const isSmallScreen = screenWidth < 380;
 
 export default function AuthPage() {
   const navigation = useNavigation();
+  const route = useRoute();
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const isDarkMode = colorScheme === "dark";
   const { setUserRole } = useUserRole();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
@@ -36,31 +46,38 @@ export default function AuthPage() {
   const [user, loading, error] = useAuthState(auth);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState("login");
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-  const [registerName, setRegisterName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerRole, setRegisterRole] = useState('applicant');
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerRole, setRegisterRole] = useState("applicant");
 
   useEffect(() => {
     if (user) {
       // Add a small delay to ensure profile is fully updated
       setTimeout(() => {
-        navigation.replace('Drawer');
+        navigation.replace("Drawer");
       }, 100);
     }
   }, [user]);
 
+  useEffect(() => {
+    const nextMode = route?.params?.mode;
+    if (nextMode === "login" || nextMode === "register") {
+      setMode(nextMode);
+    }
+  }, [route?.params?.mode]);
+
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
       if (isWeb) {
-        alert('Please fill all fields.');
+        alert("Please fill all fields.");
       } else {
-        Alert.alert('Error', 'Please fill all fields.');
+        Alert.alert("Error", "Please fill all fields.");
       }
       return;
     }
@@ -71,9 +88,9 @@ export default function AuthPage() {
     } catch (error) {
       setIsLoading(false);
       if (isWeb) {
-        alert('Login Failed: ' + error.message);
+        alert("Login Failed: " + error.message);
       } else {
-        Alert.alert('Login Failed', error.message);
+        Alert.alert("Login Failed", error.message);
       }
     }
   };
@@ -81,38 +98,41 @@ export default function AuthPage() {
   const handleRegister = async () => {
     if (!registerName || !registerEmail || !registerPassword) {
       if (isWeb) {
-        alert('Please fill all fields.');
+        alert("Please fill all fields.");
       } else {
-        Alert.alert('Error', 'Please fill all fields.');
+        Alert.alert("Error", "Please fill all fields.");
       }
       return;
     }
     setIsLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        registerEmail,
+        registerPassword,
+      );
       await updateProfile(userCredential.user, {
         displayName: registerName,
         photoURL: registerRole, // Using photoURL to store role temporarily
       });
-      
+
       // Reload user to ensure profile changes are reflected
       await reload(userCredential.user);
-      
-      
+
       // Immediately set the role in context for instant UI update
       setUserRole(registerRole);
-      
+
       // Force a small delay to ensure the profile is fully updated
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       if (isWeb) {
-        alert('Registration Failed: ' + error.message);
+        alert("Registration Failed: " + error.message);
       } else {
-        Alert.alert('Registration Failed', error.message);
+        Alert.alert("Registration Failed", error.message);
       }
     }
   };
@@ -123,43 +143,90 @@ export default function AuthPage() {
         styles.container,
         isWebShortViewport && styles.containerWebShort,
         isWebUltraShortViewport && styles.containerWebUltraShort,
-        isDarkMode && { backgroundColor: '#121212' },
+        isDarkMode && { backgroundColor: "#121212" },
       ]}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={[styles.contentWrapper, isWebShortViewport && styles.contentWrapperWebShort]}>
-        <View style={[styles.iconContainer, isWebShortViewport && styles.iconContainerWebShort]}>
-          <View style={[styles.logoContainer, isWebShortViewport && styles.logoContainerWebShort]}>
-            <Image 
-              source={require('../../assets/images/Logo.jpeg')} 
+      <View
+        style={[
+          styles.contentWrapper,
+          isWebShortViewport && styles.contentWrapperWebShort,
+        ]}
+      >
+        <View
+          style={[
+            styles.iconContainer,
+            isWebShortViewport && styles.iconContainerWebShort,
+          ]}
+        >
+          <View
+            style={[
+              styles.logoContainer,
+              isWebShortViewport && styles.logoContainerWebShort,
+            ]}
+          >
+            <Image
+              source={require("../../assets/images/Logo.jpeg")}
               style={[styles.logo, isWebShortViewport && styles.logoWebShort]}
               resizeMode="contain"
             />
           </View>
         </View>
-        <Text style={[styles.title, isWebShortViewport && styles.titleWebShort, isDarkMode && { color: '#fff' }]}>
+        <Text
+          style={[
+            styles.title,
+            isWebShortViewport && styles.titleWebShort,
+            isDarkMode && { color: "#fff" },
+          ]}
+        >
           Welcome to Finji
         </Text>
 
         {/* Tabs */}
-        <View style={[styles.tabContainer, isWebShortViewport && styles.tabContainerWebShort]}>
+        <View
+          style={[
+            styles.tabContainer,
+            isWebShortViewport && styles.tabContainerWebShort,
+          ]}
+        >
           <TouchableOpacity
-            onPress={() => setMode('login')}
-            style={[styles.tab, mode === 'login' && styles.activeTabBackground]}
+            onPress={() => setMode("login")}
+            style={[styles.tab, mode === "login" && styles.activeTabBackground]}
           >
-            <Text style={[styles.tabText, isWebShortViewport && styles.tabTextWebShort, mode === 'login' && styles.activeTabText]}>Login</Text>
+            <Text
+              style={[
+                styles.tabText,
+                isWebShortViewport && styles.tabTextWebShort,
+                mode === "login" && styles.activeTabText,
+              ]}
+            >
+              Login
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setMode('register')}
-            style={[styles.tab, mode === 'register' && styles.activeTabBackground]}
+            onPress={() => setMode("register")}
+            style={[
+              styles.tab,
+              mode === "register" && styles.activeTabBackground,
+            ]}
           >
-            <Text style={[styles.tabText, isWebShortViewport && styles.tabTextWebShort, mode === 'register' && styles.activeTabText]}>Register</Text>
+            <Text
+              style={[
+                styles.tabText,
+                isWebShortViewport && styles.tabTextWebShort,
+                mode === "register" && styles.activeTabText,
+              ]}
+            >
+              Register
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Forms */}
-        {mode === 'login' ? (
-          <View style={[styles.form, isWebShortViewport && styles.formWebShort]}>
+        {mode === "login" ? (
+          <View
+            style={[styles.form, isWebShortViewport && styles.formWebShort]}
+          >
             <Text style={styles.label}>Email</Text>
             <TextInput
               placeholder="name@example.com"
@@ -180,12 +247,22 @@ export default function AuthPage() {
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleLogin} style={styles.button} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign in</Text>}
+            <TouchableOpacity
+              onPress={handleLogin}
+              style={styles.button}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign in</Text>
+              )}
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={[styles.form, isWebShortViewport && styles.formWebShort]}>
+          <View
+            style={[styles.form, isWebShortViewport && styles.formWebShort]}
+          >
             <Text style={styles.label}>Full Name</Text>
             <TextInput
               placeholder="John Doe"
@@ -213,24 +290,48 @@ export default function AuthPage() {
             <Text style={styles.label}>Role</Text>
             <View style={styles.roleContainer}>
               <TouchableOpacity
-                onPress={() => setRegisterRole('investor')}
-                style={[styles.roleButton, registerRole === 'investor' && styles.activeRoleButton]}
+                onPress={() => setRegisterRole("investor")}
+                style={[
+                  styles.roleButton,
+                  registerRole === "investor" && styles.activeRoleButton,
+                ]}
               >
-                <Text style={[styles.roleButtonText, registerRole === 'investor' && styles.activeRoleButtonText]}>
+                <Text
+                  style={[
+                    styles.roleButtonText,
+                    registerRole === "investor" && styles.activeRoleButtonText,
+                  ]}
+                >
                   Investor
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => setRegisterRole('applicant')}
-                style={[styles.roleButton, registerRole === 'applicant' && styles.activeRoleButton]}
+                onPress={() => setRegisterRole("applicant")}
+                style={[
+                  styles.roleButton,
+                  registerRole === "applicant" && styles.activeRoleButton,
+                ]}
               >
-                <Text style={[styles.roleButtonText, registerRole === 'applicant' && styles.activeRoleButtonText]}>
+                <Text
+                  style={[
+                    styles.roleButtonText,
+                    registerRole === "applicant" && styles.activeRoleButtonText,
+                  ]}
+                >
                   Applicant
                 </Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
+            <TouchableOpacity
+              onPress={handleRegister}
+              style={styles.button}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Create account</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -248,15 +349,38 @@ export default function AuthPage() {
 
 function OAuthButtons({ isCompact }) {
   return (
-    <View style={{ marginTop: isCompact ? 8 : (isSmallScreen ? 10 : (isWeb ? 12 : 16)) }}>
-      <View style={{ alignItems: 'center', marginBottom: isCompact ? 6 : (isSmallScreen ? 8 : 12) }}>
-        <Text style={{ fontSize: isCompact ? 11 : 12, color: '#6c757d' }}>Or continue with</Text>
+    <View
+      style={{
+        marginTop: isCompact ? 8 : isSmallScreen ? 10 : isWeb ? 12 : 16,
+      }}
+    >
+      <View
+        style={{
+          alignItems: "center",
+          marginBottom: isCompact ? 6 : isSmallScreen ? 8 : 12,
+        }}
+      >
+        <Text style={{ fontSize: isCompact ? 11 : 12, color: "#6c757d" }}>
+          Or continue with
+        </Text>
       </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
-        <TouchableOpacity style={styles.oauthButton} onPress={() => alert('Facebook login coming soon')}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <TouchableOpacity
+          style={styles.oauthButton}
+          onPress={() => alert("Facebook login coming soon")}
+        >
           <Text style={styles.oauthButtonText}>Facebook</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.oauthButton} onPress={() => alert('Google login coming soon')}>
+        <TouchableOpacity
+          style={styles.oauthButton}
+          onPress={() => alert("Google login coming soon")}
+        >
           <Text style={styles.oauthButtonText}>Google</Text>
         </TouchableOpacity>
       </View>
@@ -264,16 +388,15 @@ function OAuthButtons({ isCompact }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: isWeb ? 28 : (isSmallScreen ? 16 : 20),
-    paddingTop: isWeb ? 32 : (isSmallScreen ? 18 : 34),
+    padding: isWeb ? 28 : isSmallScreen ? 16 : 20,
+    paddingTop: isWeb ? 32 : isSmallScreen ? 18 : 34,
     // Extra bottom space so the last items never look "cut off" on short screens
-    paddingBottom: isWeb ? 24 : (isSmallScreen ? 44 : 36),
-    backgroundColor: '#fff',
-    minHeight: '100%',
+    paddingBottom: isWeb ? 24 : isSmallScreen ? 44 : 36,
+    backgroundColor: "#fff",
+    minHeight: "100%",
   },
   // Compact web-mobile viewport (helps fit all content on ~5" screens)
   containerWebShort: {
@@ -286,39 +409,39 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   contentWrapper: {
-    maxWidth: isWeb ? 420 : '100%',
-    width: '100%',
-    alignSelf: 'center',
+    maxWidth: isWeb ? 420 : "100%",
+    width: "100%",
+    alignSelf: "center",
   },
   contentWrapperWebShort: {
     maxWidth: 360,
   },
   iconContainer: {
-    alignItems: 'center',
-    marginBottom: isWeb ? 12 : (isSmallScreen ? 6 : 10),
+    alignItems: "center",
+    marginBottom: isWeb ? 12 : isSmallScreen ? 6 : 10,
   },
   iconContainerWebShort: {
     marginBottom: 4,
   },
   logoContainer: {
-    backgroundColor: '#e6f0ff',
-    padding: isWeb ? 12 : (isSmallScreen ? 10 : 12),
+    backgroundColor: "#e6f0ff",
+    padding: isWeb ? 12 : isSmallScreen ? 10 : 12,
     borderRadius: 999,
     ...(isWeb && {
-      transition: 'transform 0.2s ease',
-      cursor: 'default',
-      ':hover': {
-        transform: 'scale(1.05)',
-      }
+      transition: "transform 0.2s ease",
+      cursor: "default",
+      ":hover": {
+        transform: "scale(1.05)",
+      },
     }),
   },
   logoContainerWebShort: {
     padding: 8,
   },
   logo: {
-    width: isWeb ? 64 : (isSmallScreen ? 52 : 60),
-    height: isWeb ? 64 : (isSmallScreen ? 52 : 60),
-    borderRadius: isWeb ? 32 : (isSmallScreen ? 26 : 30),
+    width: isWeb ? 64 : isSmallScreen ? 52 : 60,
+    height: isWeb ? 64 : isSmallScreen ? 52 : 60,
+    borderRadius: isWeb ? 32 : isSmallScreen ? 26 : 30,
   },
   logoWebShort: {
     width: 52,
@@ -326,24 +449,24 @@ const styles = StyleSheet.create({
     borderRadius: 26,
   },
   title: {
-    fontSize: isWeb ? 26 : (isSmallScreen ? 20 : 22),
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: isWeb ? 16 : (isSmallScreen ? 12 : 18),
+    fontSize: isWeb ? 26 : isSmallScreen ? 20 : 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: isWeb ? 16 : isSmallScreen ? 12 : 18,
   },
   titleWebShort: {
     fontSize: 20,
     marginBottom: 10,
   },
-  
+
   tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: isWeb ? 14 : (isSmallScreen ? 14 : 18),
-    backgroundColor: '#f0f0f0',
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: isWeb ? 14 : isSmallScreen ? 14 : 18,
+    backgroundColor: "#f0f0f0",
     borderRadius: 12,
     ...(isWeb && {
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     }),
   },
   tabContainerWebShort: {
@@ -351,173 +474,173 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: isWeb ? 12 : (isSmallScreen ? 10 : 12),
-    alignItems: 'center',
+    paddingVertical: isWeb ? 12 : isSmallScreen ? 10 : 12,
+    alignItems: "center",
     borderRadius: 12,
-    cursor: isWeb ? 'pointer' : 'default',
-    transition: isWeb ? 'all 0.2s ease' : undefined,
+    cursor: isWeb ? "pointer" : "default",
+    transition: isWeb ? "all 0.2s ease" : undefined,
     ...(isWeb && {
-      ':hover': {
-        backgroundColor: '#e0e0e0',
-      }
+      ":hover": {
+        backgroundColor: "#e0e0e0",
+      },
     }),
   },
   activeTabBackground: {
-    backgroundColor: '#e6f0ff',
+    backgroundColor: "#e6f0ff",
   },
   tabText: {
-    fontSize: isWeb ? 15 : (isSmallScreen ? 14 : 15),
-    color: '#6c757d',
-    fontWeight: '600',
+    fontSize: isWeb ? 15 : isSmallScreen ? 14 : 15,
+    color: "#6c757d",
+    fontWeight: "600",
   },
   tabTextWebShort: {
     fontSize: 13,
   },
   activeTabText: {
-    color: '#007bff',
+    color: "#007bff",
   },
   label: {
-    marginBottom: isWeb ? 8 : (isSmallScreen ? 4 : 6),
-    fontWeight: '500',
-    color: '#212529',
-    fontSize: isWeb ? 14 : (isSmallScreen ? 13 : 14),
+    marginBottom: isWeb ? 8 : isSmallScreen ? 4 : 6,
+    fontWeight: "500",
+    color: "#212529",
+    fontSize: isWeb ? 14 : isSmallScreen ? 13 : 14,
   },
   form: {
-    marginBottom: isWeb ? 16 : (isSmallScreen ? 14 : 20),
+    marginBottom: isWeb ? 16 : isSmallScreen ? 14 : 20,
   },
   formWebShort: {
     marginBottom: 14,
   },
   input: {
-    backgroundColor: '#fff',
-    padding: isWeb ? 12 : (isSmallScreen ? 10 : 12),
+    backgroundColor: "#fff",
+    padding: isWeb ? 12 : isSmallScreen ? 10 : 12,
     borderRadius: 8,
-    marginBottom: isWeb ? 12 : (isSmallScreen ? 10 : 12),
+    marginBottom: isWeb ? 12 : isSmallScreen ? 10 : 12,
     borderWidth: 1,
-    borderColor: '#ced4da',
+    borderColor: "#ced4da",
     fontSize: isWeb ? 14 : 16,
     ...(isWeb && {
-      transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-      cursor: 'text',
-      ':focus': {
-        borderColor: '#007bff',
-        boxShadow: '0 0 0 3px rgba(0,123,255,0.1)',
-      }
+      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+      cursor: "text",
+      ":focus": {
+        borderColor: "#007bff",
+        boxShadow: "0 0 0 3px rgba(0,123,255,0.1)",
+      },
     }),
   },
   forgotPassword: {
-    alignItems: 'flex-end',
-    marginBottom: isWeb ? 14 : (isSmallScreen ? 10 : 14),
+    alignItems: "flex-end",
+    marginBottom: isWeb ? 14 : isSmallScreen ? 10 : 14,
   },
   forgotPasswordText: {
-    color: '#007bff',
-    fontSize: isWeb ? 13 : (isSmallScreen ? 12 : 13),
-    cursor: isWeb ? 'pointer' : 'default',
+    color: "#007bff",
+    fontSize: isWeb ? 13 : isSmallScreen ? 12 : 13,
+    cursor: isWeb ? "pointer" : "default",
     ...(isWeb && {
-      transition: 'color 0.2s ease',
-      ':hover': {
-        color: '#0056b3',
-        textDecoration: 'underline',
-      }
+      transition: "color 0.2s ease",
+      ":hover": {
+        color: "#0056b3",
+        textDecoration: "underline",
+      },
     }),
   },
   button: {
-    backgroundColor: '#cce0ff',
-    padding: isWeb ? 14 : (isSmallScreen ? 12 : 14),
+    backgroundColor: "#cce0ff",
+    padding: isWeb ? 14 : isSmallScreen ? 12 : 14,
     borderRadius: 8,
-    alignItems: 'center',
-    cursor: isWeb ? 'pointer' : 'default',
-    transition: isWeb ? 'all 0.2s ease' : undefined,
+    alignItems: "center",
+    cursor: isWeb ? "pointer" : "default",
+    transition: isWeb ? "all 0.2s ease" : undefined,
     ...(isWeb && {
-      ':hover': {
-        backgroundColor: '#b3d9ff',
-        transform: 'translateY(-1px)',
-        boxShadow: '0 4px 12px rgba(0,123,255,0.2)',
+      ":hover": {
+        backgroundColor: "#b3d9ff",
+        transform: "translateY(-1px)",
+        boxShadow: "0 4px 12px rgba(0,123,255,0.2)",
       },
-      ':active': {
-        transform: 'translateY(0)',
-      }
+      ":active": {
+        transform: "translateY(0)",
+      },
     }),
   },
   buttonText: {
-    color: '#007bff',
-    fontWeight: 'bold',
-    fontSize: isWeb ? 15 : (isSmallScreen ? 14 : 16),
+    color: "#007bff",
+    fontWeight: "bold",
+    fontSize: isWeb ? 15 : isSmallScreen ? 14 : 16,
   },
   oauthButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: "#dee2e6",
     borderRadius: 8,
-    paddingVertical: isWeb ? 12 : (isSmallScreen ? 10 : 12),
-    paddingHorizontal: isWeb ? 10 : (isSmallScreen ? 8 : 10),
+    paddingVertical: isWeb ? 12 : isSmallScreen ? 10 : 12,
+    paddingHorizontal: isWeb ? 10 : isSmallScreen ? 8 : 10,
     flex: 1,
-    alignItems: 'center',
-    cursor: isWeb ? 'pointer' : 'default',
-    transition: isWeb ? 'all 0.2s ease' : undefined,
+    alignItems: "center",
+    cursor: isWeb ? "pointer" : "default",
+    transition: isWeb ? "all 0.2s ease" : undefined,
     ...(isWeb && {
-      ':hover': {
-        backgroundColor: '#f8f9fa',
-        borderColor: '#007bff',
-        transform: 'translateY(-1px)',
-      }
+      ":hover": {
+        backgroundColor: "#f8f9fa",
+        borderColor: "#007bff",
+        transform: "translateY(-1px)",
+      },
     }),
   },
   oauthButtonText: {
-    fontSize: isWeb ? 13 : (isSmallScreen ? 13 : 14),
-    fontWeight: '600',
-    color: '#343a40',
+    fontSize: isWeb ? 13 : isSmallScreen ? 13 : 14,
+    fontWeight: "600",
+    color: "#343a40",
   },
   updateText: {
     marginTop: 16,
     fontSize: 12,
-    textAlign: 'center',
-    color: '#6c757d',
+    textAlign: "center",
+    color: "#6c757d",
   },
   privacyPolicy: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
-    fontSize: isWeb ? 12 : (isSmallScreen ? 11 : 12),
-    color: '#007bff',
-    textDecorationLine: 'underline',
-    cursor: isWeb ? 'pointer' : 'default',
+    fontSize: isWeb ? 12 : isSmallScreen ? 11 : 12,
+    color: "#007bff",
+    textDecorationLine: "underline",
+    cursor: isWeb ? "pointer" : "default",
     ...(isWeb && {
-      transition: 'color 0.2s ease',
-      ':hover': {
-        color: '#0056b3',
-      }
+      transition: "color 0.2s ease",
+      ":hover": {
+        color: "#0056b3",
+      },
     }),
   },
   roleContainer: {
-    flexDirection: 'row',
-    marginBottom: isWeb ? 16 : (isSmallScreen ? 10 : 12),
-    backgroundColor: '#f0f0f0',
+    flexDirection: "row",
+    marginBottom: isWeb ? 16 : isSmallScreen ? 10 : 12,
+    backgroundColor: "#f0f0f0",
     borderRadius: 8,
     padding: 4,
   },
   roleButton: {
     flex: 1,
-    paddingVertical: isWeb ? 12 : (isSmallScreen ? 9 : 10),
-    paddingHorizontal: isWeb ? 16 : (isSmallScreen ? 10 : 12),
-    alignItems: 'center',
+    paddingVertical: isWeb ? 12 : isSmallScreen ? 9 : 10,
+    paddingHorizontal: isWeb ? 16 : isSmallScreen ? 10 : 12,
+    alignItems: "center",
     borderRadius: 6,
-    cursor: isWeb ? 'pointer' : 'default',
-    transition: isWeb ? 'all 0.2s ease' : undefined,
+    cursor: isWeb ? "pointer" : "default",
+    transition: isWeb ? "all 0.2s ease" : undefined,
     ...(isWeb && {
-      ':hover': {
-        backgroundColor: '#e0e0e0',
-      }
+      ":hover": {
+        backgroundColor: "#e0e0e0",
+      },
     }),
   },
   activeRoleButton: {
-    backgroundColor: '#e6f0ff',
+    backgroundColor: "#e6f0ff",
   },
   roleButtonText: {
-    fontSize: isWeb ? 14 : (isSmallScreen ? 12 : 13),
-    color: '#6c757d',
-    fontWeight: '600',
+    fontSize: isWeb ? 14 : isSmallScreen ? 12 : 13,
+    color: "#6c757d",
+    fontWeight: "600",
   },
   activeRoleButtonText: {
-    color: '#007bff',
+    color: "#007bff",
   },
 });

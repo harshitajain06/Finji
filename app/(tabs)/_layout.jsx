@@ -1,12 +1,17 @@
 // src/navigation/StackLayout.jsx
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { DarkTheme, DefaultTheme, NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import {
+    DarkTheme,
+    DefaultTheme,
+    NavigationContainer,
+    useNavigation,
+} from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { signOut } from 'firebase/auth';
+import { signOut } from "firebase/auth";
 import React from "react";
-import { Alert, Platform, useWindowDimensions } from 'react-native';
+import { Alert, Platform, useWindowDimensions } from "react-native";
 import NotFoundScreen from "../+not-found";
 import { auth } from "../../config/firebase";
 import { Colors } from "../../constants/Colors";
@@ -15,11 +20,12 @@ import { useColorScheme } from "../../hooks/useColorScheme";
 import ApplicantProfileScreen from "./ApplicantProfileScreen";
 import FundScreen from "./FundScreen";
 import HomeScreen from "./HomeScreen";
-import LoginRegister from './index';
+import LoginRegister from "./index";
 import PostScreen from "./PostScreen";
 import ProfileScreen from "./ProfileScreen";
+import WelcomeScreen from "./WelcomeScreen";
 
-const isWeb = Platform.OS === 'web';
+const isWeb = Platform.OS === "web";
 const WEB_FIXED_TABBAR_MIN_WIDTH = 768;
 
 const Stack = createStackNavigator();
@@ -32,7 +38,6 @@ const BottomTabs = () => {
   const { userRole, isLoading, user } = useUserRole();
   const { width } = useWindowDimensions();
   const useFixedWebTabBar = isWeb && width >= WEB_FIXED_TABBAR_MIN_WIDTH;
-
 
   // Show loading state while determining user role
   if (isLoading) {
@@ -52,7 +57,7 @@ const BottomTabs = () => {
         tabBarStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].background,
           ...(useFixedWebTabBar && {
-            position: 'fixed',
+            position: "fixed",
             bottom: 0,
             left: 0,
             right: 0,
@@ -60,8 +65,8 @@ const BottomTabs = () => {
             paddingBottom: 10,
             paddingTop: 10,
             borderTopWidth: 1,
-            borderTopColor: '#e0e0e0',
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+            borderTopColor: "#e0e0e0",
+            boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
           }),
         },
         tabBarIcon: ({ focused, color, size }) => {
@@ -80,15 +85,19 @@ const BottomTabs = () => {
         ...(useFixedWebTabBar && {
           tabBarLabelStyle: {
             fontSize: 12,
-            fontWeight: '600',
+            fontWeight: "600",
             marginTop: 4,
           },
         }),
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      {userRole === 'investor' ? (
-        <Tab.Screen name="Fund" component={FundScreen} options={{ title: "Fund" }} />
+      {userRole === "investor" ? (
+        <Tab.Screen
+          name="Fund"
+          component={FundScreen}
+          options={{ title: "Fund" }}
+        />
       ) : (
         <Tab.Screen
           name="Post"
@@ -111,7 +120,7 @@ const DrawerNavigator = () => {
       // Use reset instead of replace to clear the entire navigation stack
       navigation.reset({
         index: 0,
-        routes: [{ name: 'LoginRegister' }],
+        routes: [{ name: "Welcome" }],
       });
     } catch (err) {
       console.error("Logout Error:", err);
@@ -129,64 +138,64 @@ const DrawerNavigator = () => {
   }
 
   return (
-    <Drawer.Navigator 
-      initialRouteName="MainTabs" 
+    <Drawer.Navigator
+      initialRouteName="MainTabs"
       screenOptions={{
         ...(isWeb && {
           drawerStyle: {
             width: 280,
-            backgroundColor: '#fff',
-            boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+            backgroundColor: "#fff",
+            boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
           },
           drawerLabelStyle: {
             fontSize: 16,
-            fontWeight: '500',
-            color: '#333',
+            fontWeight: "500",
+            color: "#333",
           },
-          drawerActiveBackgroundColor: '#e6f0ff',
-          drawerActiveTintColor: '#007bff',
+          drawerActiveBackgroundColor: "#e6f0ff",
+          drawerActiveTintColor: "#007bff",
         }),
       }}
     >
-      <Drawer.Screen 
-        name="MainTabs" 
-        component={BottomTabs} 
-        options={{ 
-          title: `Home (${userRole === 'investor' ? 'Investor' : 'Applicant'})` 
-        }} 
+      <Drawer.Screen
+        name="MainTabs"
+        component={BottomTabs}
+        options={{
+          title: `Home (${userRole === "investor" ? "Investor" : "Applicant"})`,
+        }}
       />
-      
-      {userRole === 'investor' && (
+
+      {userRole === "investor" && (
         <Drawer.Screen
           name="Profile"
           component={ProfileScreen}
           options={{
-            title: 'My Investments',
+            title: "My Investments",
             drawerIcon: ({ color, size }) => (
               <Ionicons name="person-outline" size={size} color={color} />
             ),
           }}
         />
       )}
-      
-      {userRole === 'applicant' && (
+
+      {userRole === "applicant" && (
         <Drawer.Screen
           name="ApplicantProfile"
           component={ApplicantProfileScreen}
           options={{
-            title: 'My Profile & Investors',
+            title: "My Profile & Investors",
             drawerIcon: ({ color, size }) => (
               <Ionicons name="people-outline" size={size} color={color} />
             ),
           }}
         />
       )}
-      
+
       <Drawer.Screen
         name="Logout"
         component={() => null}
         options={{
-          title: 'Logout',
+          title: "Logout",
           drawerIcon: ({ color, size }) => (
             <Ionicons name="log-out-outline" size={size} color={color} />
           ),
@@ -207,19 +216,22 @@ export default function StackLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <NavigationContainer
+      theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+    >
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
           contentStyle: {
             backgroundColor: Colors[colorScheme ?? "light"].background,
             ...(isWeb && {
-              minHeight: '100%',
+              minHeight: "100%",
             }),
           },
         }}
       >
-      <Stack.Screen name="LoginRegister" component={LoginRegister} />
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="LoginRegister" component={LoginRegister} />
         <Stack.Screen name="Drawer" component={DrawerNavigator} />
         <Stack.Screen name="NotFound" component={NotFoundScreen} />
       </Stack.Navigator>
