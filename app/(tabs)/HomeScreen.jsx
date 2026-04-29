@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import InfoIcon from "../../components/InfoIcon";
 
-const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 export default function HomePage() {
+  const { width: viewportWidth } = useWindowDimensions();
+  const isWebWide = isWeb && viewportWidth >= 768;
   const [loading, setLoading] = useState(false);
   const [loans, setLoans] = useState([]);
   const [impactStats, setImpactStats] = useState({
@@ -116,9 +117,15 @@ export default function HomePage() {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.scrollContainer,
+        !isWebWide && styles.scrollContainerWebNarrow,
+      ]}
+    >
       {/* Hero Section */}
-      <View style={styles.heroSection}>
+      <View style={[styles.heroSection, !isWebWide && styles.heroSectionWebNarrow]}>
         <View style={styles.heroTitleContainer}>
           <Text style={styles.heroTitle}>Finji</Text>
           <InfoIcon 
@@ -136,7 +143,7 @@ export default function HomePage() {
       </View>
 
       {/* Featured Categories */}
-      <View style={styles.categoriesSection}>
+      <View style={[styles.categoriesSection, !isWebWide && styles.sectionWebNarrow]}>
         <View style={styles.sectionTitleContainer}>
           <Text style={styles.sectionTitle}>Featured Categories</Text>
           <InfoIcon 
@@ -157,7 +164,7 @@ export default function HomePage() {
       </View>
 
       {/* Almost Funded Section */}
-      <View style={styles.almostFundedSection}>
+      <View style={[styles.almostFundedSection, !isWebWide && styles.sectionWebNarrow]}>
         <View style={styles.sectionTitleContainer}>
           <Text style={styles.sectionTitle}>Almost there! Fund the last few dollars they need</Text>
           <InfoIcon 
@@ -191,7 +198,7 @@ export default function HomePage() {
       </View>
 
       {/* Success Stories */}
-      <View style={styles.successStoriesSection}>
+      <View style={[styles.successStoriesSection, !isWebWide && styles.sectionWebNarrow]}>
         <Text style={styles.sectionTitle}>Success Stories</Text>
         <Text style={styles.sectionSubtitle}>100% of your loan goes to supporting borrowers</Text>
         
@@ -210,7 +217,7 @@ export default function HomePage() {
       </View>
 
       {/* Impact Statistics */}
-      <View style={styles.impactSection}>
+      <View style={[styles.impactSection, !isWebWide && styles.sectionWebNarrow]}>
         <Text style={styles.sectionTitle}>Our Community Impact</Text>
         <Text style={styles.sectionSubtitle}>Finji helps people improve their livelihoods</Text>
         
@@ -231,7 +238,7 @@ export default function HomePage() {
       </View>
 
       {/* Relend Cycle */}
-      <View style={styles.relendSection}>
+      <View style={[styles.relendSection, !isWebWide && styles.sectionWebNarrow, !isWebWide && styles.relendSectionWebNarrow]}>
         <Text style={styles.sectionTitle}>Multiply Your Impact</Text>
         <Text style={styles.sectionSubtitle}>Relend money you get back to help another person</Text>
         <Text style={styles.relendText}>Just $25 can help many people over time.</Text>
@@ -274,7 +281,7 @@ export default function HomePage() {
       </View>
 
       {/* About Section */}
-      <View style={styles.aboutBox}>
+      <View style={[styles.aboutBox, !isWebWide && styles.sectionWebNarrow, !isWebWide && styles.aboutBoxWebNarrow]}>
         <Text style={styles.sectionTitle}>About Finji</Text>
         <Text style={styles.aboutText}>
           Finji connects people who want to make a difference with borrowers around the world. 
@@ -284,7 +291,7 @@ export default function HomePage() {
       </View>
 
       {/* How It Works Section */}
-      <View style={styles.howItWorks}>
+      <View style={[styles.howItWorks, !isWebWide && styles.sectionWebNarrow, !isWebWide && styles.howItWorksWebNarrow]}>
         <Text style={styles.sectionTitle}>How it Works</Text>
         <View style={styles.stepsContainer}>
           <View style={styles.step}>
@@ -315,7 +322,7 @@ export default function HomePage() {
       </View>
 
       {/* Trust Indicators */}
-      <View style={styles.trustSection}>
+      <View style={[styles.trustSection, !isWebWide && styles.sectionWebNarrow]}>
         <Text style={styles.sectionTitle}>Give with Confidence</Text>
         <View style={styles.trustGrid}>
           <View style={styles.trustItem}>
@@ -349,11 +356,15 @@ const styles = StyleSheet.create({
     // Extra space so content isn't covered by bottom tab bar (especially on mobile web)
     paddingBottom: isWeb ? 110 : 40,
   },
+  scrollContainerWebNarrow: {
+    paddingHorizontal: 16,
+    paddingBottom: 90,
+  },
   
 
   // Hero Section
   heroSection: {
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundColor: '#667eea',
     padding: isWeb ? 60 : 40,
     borderRadius: 20,
     width: '100%',
@@ -361,9 +372,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: isWeb ? 30 : 20,
     ...(isWeb && {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
     }),
+  },
+  heroSectionWebNarrow: {
+    padding: 22,
+    maxWidth: '100%',
+    marginVertical: 16,
   },
   heroTitle: {
     fontSize: isWeb ? 42 : 32,
@@ -404,6 +420,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: isWeb ? 900 : "90%",
     marginVertical: isWeb ? 40 : 25,
+  },
+  sectionWebNarrow: {
+    maxWidth: '100%',
+    marginVertical: 18,
   },
   categoriesGrid: {
     flexDirection: isWeb ? 'row' : 'column',
@@ -655,6 +675,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: isWeb ? 40 : 25,
   },
+  relendSectionWebNarrow: {
+    padding: 20,
+  },
   relendText: {
     fontSize: isWeb ? 18 : 16,
     color: '#333',
@@ -800,6 +823,10 @@ const styles = StyleSheet.create({
       }
     }),
   },
+  aboutBoxWebNarrow: {
+    padding: 18,
+    maxWidth: '100%',
+  },
   aboutText: { 
     fontSize: isWeb ? 16 : 14, 
     color: "#444", 
@@ -820,6 +847,10 @@ const styles = StyleSheet.create({
     ...(isWeb && {
       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
     }),
+  },
+  howItWorksWebNarrow: {
+    padding: 18,
+    maxWidth: '100%',
   },
   stepsContainer: {
     width: '100%',

@@ -2,23 +2,24 @@ import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Dimensions,
     Image,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    View
+    View,
+    useWindowDimensions,
 } from "react-native";
 import { db } from "../../config/firebase";
 import { useUserRole } from "../../contexts/UserRoleContext";
 
-const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 const ApplicantProfileScreen = () => {
   const { user, userRole } = useUserRole();
+  const { width: viewportWidth } = useWindowDimensions();
+  const isWebWide = isWeb && viewportWidth >= 768;
   const [myPosts, setMyPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalFunding, setTotalFunding] = useState(0);
@@ -174,7 +175,7 @@ const ApplicantProfileScreen = () => {
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         {/* Header Section */}
-        <View style={styles.headerSection}>
+        <View style={[styles.headerSection, !isWebWide && styles.headerSectionWebNarrow]}>
           <View style={styles.profileInfo}>
             <View style={styles.avatarContainer}>
               <Text style={styles.avatarText}>
@@ -200,16 +201,16 @@ const ApplicantProfileScreen = () => {
         </View>
 
         {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statCard}>
+        <View style={[styles.statsSection, !isWebWide && styles.statsSectionWebNarrow]}>
+          <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
             <Text style={styles.statValue}>${totalFunding.toLocaleString()}</Text>
             <Text style={styles.statLabel}>Total Funding Received</Text>
           </View>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
             <Text style={styles.statValue}>{totalPosts}</Text>
             <Text style={styles.statLabel}>Posts Created</Text>
           </View>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, !isWebWide && styles.statCardWebNarrow]}>
             <Text style={styles.statValue}>
               {Object.values(investorData).reduce((total, investors) => total + investors.length, 0)}
             </Text>
@@ -372,6 +373,9 @@ const styles = StyleSheet.create({
       backgroundImage: 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)',
     }),
   },
+  headerSectionWebNarrow: {
+    padding: 20,
+  },
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -449,6 +453,9 @@ const styles = StyleSheet.create({
       gap: '12px',
     }),
   },
+  statsSectionWebNarrow: {
+    padding: 12,
+  },
   statCard: {
     flex: 1,
     backgroundColor: '#fff',
@@ -465,6 +472,7 @@ const styles = StyleSheet.create({
       }
     }),
   },
+  statCardWebNarrow: {},
   statValue: {
     fontSize: 20,
     fontWeight: 'bold',
