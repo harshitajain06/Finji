@@ -57,6 +57,13 @@ export default function AuthPage() {
   const [registerRole, setRegisterRole] = useState("applicant");
 
   useEffect(() => {
+    const requestedMode = route?.params?.mode;
+    if (requestedMode === "login" || requestedMode === "register") {
+      setMode(requestedMode);
+    }
+  }, [route?.params?.mode]);
+
+  useEffect(() => {
     if (user) {
       // Add a small delay to ensure profile is fully updated
       setTimeout(() => {
@@ -64,13 +71,6 @@ export default function AuthPage() {
       }, 100);
     }
   }, [user]);
-
-  useEffect(() => {
-    const nextMode = route?.params?.mode;
-    if (nextMode === "login" || nextMode === "register") {
-      setMode(nextMode);
-    }
-  }, [route?.params?.mode]);
 
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {

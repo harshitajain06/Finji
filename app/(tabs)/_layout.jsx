@@ -220,6 +220,7 @@ export default function StackLayout() {
       theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
       <Stack.Navigator
+        initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
           contentStyle: {

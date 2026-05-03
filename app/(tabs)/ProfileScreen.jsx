@@ -332,7 +332,6 @@ const styles = StyleSheet.create({
     padding: isWeb ? 40 : 20,
     ...(isWeb && {
       boxShadow: '0 4px 20px rgba(0, 123, 255, 0.3)',
-      background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
     }),
   },
   profileInfo: {
@@ -437,10 +436,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     ...(isWeb && {
       fontSize: 24,
-      background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-      backgroundClip: 'text',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      color: '#0056b3',
     }),
   },
   statLabel: {
@@ -608,7 +604,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     borderRadius: 3,
     ...(isWeb && {
-      background: 'linear-gradient(90deg, #007bff 0%, #0056b3 100%)',
       transition: 'width 0.5s ease',
     }),
   },

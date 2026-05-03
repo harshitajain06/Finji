@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
 
   // Hero Section
   heroSection: {
-    backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    backgroundColor: "#667eea",
     padding: isWeb ? 60 : 40,
     borderRadius: 20,
     width: "100%",
@@ -424,7 +424,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: isWeb ? 30 : 20,
     ...(isWeb && {
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       boxShadow: "0 10px 40px rgba(102, 126, 234, 0.3)",
     }),
   },

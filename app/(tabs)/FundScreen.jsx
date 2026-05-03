@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
   modalContentWeb: {
     maxWidth: 600,
     width: '100%',
-    margin: '0 auto',
+    alignSelf: 'center',
     maxHeight: '80vh',
   },
   modalImage: {
@@ -1127,7 +1127,7 @@ const styles = StyleSheet.create({
   confirmationModalWeb: {
     maxWidth: 500,
     width: '100%',
-    margin: '0 auto',
+    alignSelf: 'center',
     maxHeight: '80vh',
   },
   confirmationHeader: {
