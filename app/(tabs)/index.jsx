@@ -335,56 +335,8 @@ export default function AuthPage() {
             </TouchableOpacity>
           </View>
         )}
-
-        {/* OAuth Buttons */}
-        <OAuthButtons isCompact={isWebShortViewport} />
-
-        <TouchableOpacity>
-          <Text style={styles.privacyPolicy}>Privacy Policy.</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
-  );
-}
-
-function OAuthButtons({ isCompact }) {
-  return (
-    <View
-      style={{
-        marginTop: isCompact ? 8 : isSmallScreen ? 10 : isWeb ? 12 : 16,
-      }}
-    >
-      <View
-        style={{
-          alignItems: "center",
-          marginBottom: isCompact ? 6 : isSmallScreen ? 8 : 12,
-        }}
-      >
-        <Text style={{ fontSize: isCompact ? 11 : 12, color: "#6c757d" }}>
-          Or continue with
-        </Text>
-      </View>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <TouchableOpacity
-          style={styles.oauthButton}
-          onPress={() => alert("Facebook login coming soon")}
-        >
-          <Text style={styles.oauthButtonText}>Facebook</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.oauthButton}
-          onPress={() => alert("Google login coming soon")}
-        >
-          <Text style={styles.oauthButtonText}>Google</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
   );
 }
 
@@ -567,49 +519,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: isWeb ? 15 : isSmallScreen ? 14 : 16,
   },
-  oauthButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#dee2e6",
-    borderRadius: 8,
-    paddingVertical: isWeb ? 12 : isSmallScreen ? 10 : 12,
-    paddingHorizontal: isWeb ? 10 : isSmallScreen ? 8 : 10,
-    flex: 1,
-    alignItems: "center",
-    cursor: isWeb ? "pointer" : "default",
-    transition: isWeb ? "all 0.2s ease" : undefined,
-    ...(isWeb && {
-      ":hover": {
-        backgroundColor: "#f8f9fa",
-        borderColor: "#007bff",
-        transform: "translateY(-1px)",
-      },
-    }),
-  },
-  oauthButtonText: {
-    fontSize: isWeb ? 13 : isSmallScreen ? 13 : 14,
-    fontWeight: "600",
-    color: "#343a40",
-  },
   updateText: {
     marginTop: 16,
     fontSize: 12,
     textAlign: "center",
     color: "#6c757d",
-  },
-  privacyPolicy: {
-    textAlign: "center",
-    marginTop: 4,
-    fontSize: isWeb ? 12 : isSmallScreen ? 11 : 12,
-    color: "#007bff",
-    textDecorationLine: "underline",
-    cursor: isWeb ? "pointer" : "default",
-    ...(isWeb && {
-      transition: "color 0.2s ease",
-      ":hover": {
-        color: "#0056b3",
-      },
-    }),
   },
   roleContainer: {
     flexDirection: "row",
