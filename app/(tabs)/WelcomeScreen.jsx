@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import {
+  Image,
   Platform,
   StyleSheet,
   Text,
@@ -29,8 +30,13 @@ export default function WelcomeScreen() {
 
       <View style={styles.content}>
         <View style={styles.hero}>
-          <Text style={styles.kicker}>Welcome to</Text>
-          <Text style={styles.title}>Finji</Text>
+          <Image
+            source={require("../../assets/images/Logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="Finji logo"
+          />
+          <Text style={styles.kicker}>Welcome to Finji</Text>
           <Text style={styles.subtitle}>
             Connect applicants and investors in one place—share your story,
             discover opportunities, and fund goals faster.
@@ -117,6 +123,13 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingTop: 8,
+    alignItems: "center",
+  },
+  logo: {
+    width: 240,
+    maxWidth: "85%",
+    height: 260,
+    marginBottom: 14,
   },
   kicker: {
     color: "rgba(255,255,255,0.72)",
@@ -124,13 +137,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: "uppercase",
     fontWeight: "700",
-  },
-  title: {
-    marginTop: 6,
-    fontSize: 40,
-    fontWeight: "900",
-    color: "#ffffff",
-    letterSpacing: 0.2,
+    textAlign: "center",
   },
   subtitle: {
     marginTop: 10,
@@ -138,6 +145,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "rgba(255,255,255,0.82)",
     maxWidth: 520,
+    textAlign: "center",
+    alignSelf: "stretch",
   },
   features: {
     marginTop: 18,
