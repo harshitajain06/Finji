@@ -248,7 +248,7 @@ const CreateFundingPostScreen = () => {
         )}
 
         <View style={styles.formGrid(isNarrow)}>
-          <View style={styles.formSection}>
+          <View style={styles.formSection(isNarrow)}>
             <Text style={styles.label(isNarrow)}>Name *</Text>
             <TextInput
               style={styles.input(isNarrow)}
@@ -274,7 +274,7 @@ const CreateFundingPostScreen = () => {
             />
           </View>
 
-          <View style={styles.formSection}>
+          <View style={styles.formSection(isNarrow)}>
             <Text style={styles.label(isNarrow)}>Funding Goal (USD) *</Text>
             <TextInput
               style={styles.input(isNarrow)}
@@ -413,12 +413,19 @@ const styles = StyleSheet.create({
   },
   formGrid: (isNarrow) => ({
     flexDirection: isWeb ? (isNarrow ? 'column' : 'row') : 'column',
-    gap: isWeb ? (isNarrow ? 0 : 20) : 0,
+    // On web mobile, avoid flex children splitting height 50/50 (causes label/input overlap).
+    gap: isWeb ? (isNarrow ? 20 : 20) : 12,
     marginBottom: 20,
+    ...(isWeb &&
+      isNarrow && {
+        alignItems: 'stretch',
+      }),
   }),
-  formSection: {
-    flex: isWeb ? 1 : undefined,
-  },
+  formSection: (isNarrow) => ({
+    // Only use flex:1 in the two-column (wide) layout so each column shares width, not height.
+    ...(isWeb && !isNarrow ? { flex: 1, minWidth: 0 } : {}),
+    ...(isWeb && isNarrow ? { width: '100%', flexGrow: 0, flexShrink: 0 } : {}),
+  }),
   label: (isNarrow) => ({
     marginTop: isWeb ? (isNarrow ? 14 : 20) : 12,
     fontWeight: "600",
@@ -432,6 +439,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     marginTop: 6,
+    marginBottom: isWeb ? (isNarrow ? 4 : 0) : 4,
+    minHeight: isWeb ? 48 : undefined,
     fontSize: isWeb ? 16 : undefined, // Prevent zoom on iOS
     ...(isWeb && {
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
